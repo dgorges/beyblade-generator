@@ -1,6 +1,4 @@
-node_modules/
-dist/
-.DS_Store
-*.log
-.vscode/*
-!.vscode/extensions.json
+node_modules
+dist
+reference
+public/kits
