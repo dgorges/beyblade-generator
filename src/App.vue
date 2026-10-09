@@ -12,7 +12,7 @@
         <button class="b_button b_button--ghost b_topbar__action b_topbar__action--optional" type="button" @click="resetBey"><AppIcon name="circle-add" /> Neu</button>
         <button class="b_button b_button--ghost" type="button" :disabled="!design" @click="openShare"><AppIcon name="share" /> Teilen</button>
         <button class="b_button b_button--ghost b_topbar__action b_topbar__action--optional" type="button" @click="randomize"><AppIcon name="shuffle" /> Zufall</button>
-        <button class="b_button b_button--icon" type="button" @click="dark = !dark" :aria-label="dark ? 'Lightmode' : 'Darkmode'" :title="dark ? 'Lightmode' : 'Darkmode'"><AppIcon name="palette-color" /></button>
+        <button class="b_button b_button--icon" type="button" @click="dark = !dark" :aria-label="dark ? 'Lightmode' : 'Darkmode'" :title="dark ? 'Lightmode' : 'Darkmode'"><AppIcon :name="dark ? 'lightmode' : 'darkmode'" /></button>
       </div>
     </header>
 

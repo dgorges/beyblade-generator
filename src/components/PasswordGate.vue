@@ -1,6 +1,6 @@
 <template>
   <main class="b_gate">
-    <button class="b_button b_button--icon b_gate__theme" type="button" :aria-label="dark ? 'Lightmode' : 'Darkmode'" :title="dark ? 'Lightmode' : 'Darkmode'" @click="toggle"><AppIcon name="palette-color" /></button>
+    <button class="b_button b_button--icon b_gate__theme" type="button" :aria-label="dark ? 'Lightmode' : 'Darkmode'" :title="dark ? 'Lightmode' : 'Darkmode'" @click="toggle"><AppIcon :name="dark ? 'lightmode' : 'darkmode'" /></button>
     <form class="b_card b_gate__card" aria-labelledby="gate-title" @submit.prevent="submit">
       <div class="b_logo" aria-hidden="true">BX</div>
       <h1 id="gate-title" class="b_gate__title">Beyblade Creator</h1>
