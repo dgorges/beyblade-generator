@@ -45,15 +45,19 @@
           <h2>Komponenten</h2>
         </div>
 
-        <nav class="stepper" aria-label="Beyblade Komponenten">
+        <div v-if="focus" class="focus-bar">
+          <span>🔍 Fokus: <strong>{{ focusPart.label }}</strong></span>
+          <button type="button" class="secondary" @click="visibility = {}">Alle Teile zeigen</button>
+        </div>
+        <nav v-else class="stepper" aria-label="Beyblade Komponenten">
           <button v-for="(label, index) in stepLabels" :key="label" type="button" :class="{ active: step === index + 1, done: step > index + 1 }" @click="step = index + 1">
             <span>{{ index + 1 }}</span><strong>{{ label }}</strong>
           </button>
         </nav>
 
-        <ParameterPanel v-model:blade-tab="bladeTab" :bey="bey" :kits="kitList" :locked-hint="lockedHint" @kit="switchKit" :step="step" :kit="kit" :stats="stats" :warnings="warnings" :selected="selected" />
+        <ParameterPanel v-model:blade-tab="bladeTab" :bey="bey" :kits="kitList" :locked-hint="lockedHint" :focus="focus" @kit="switchKit" :step="step" :kit="kit" :stats="stats" :warnings="warnings" :selected="selected" />
 
-        <div class="wizard-actions">
+        <div v-if="!focus" class="wizard-actions">
           <button class="secondary" type="button" :disabled="step === 1" @click="step--">← Zurück</button>
           <button v-if="step < stepLabels.length" class="primary" type="button" @click="step++">Weiter →</button>
           <button v-else class="primary" type="button" :disabled="!design || busy" @click="exportAll">⬇ STL-Paket (ZIP)</button>
@@ -67,6 +71,10 @@
         <p class="prototype-note"><strong>Hinweis:</strong> Grundlage ist das Modell „{{ kit.name }}“. Die 🔒 Schnittstellenteile werden unverändert übernommen. Die Werte zu Angriff, Verteidigung und Ausdauer sind nur grobe Schätzungen aus der Geometrie. Gedruckte Kreisel drehen sehr schnell und können brechen: nur unter Aufsicht spielen.</p>
       </aside>
     </main>
+
+    <footer class="site-footer">
+      Nicht-kommerzielles Spaßprojekt. Code und Inhalte wurden mit KI generiert.
+    </footer>
   </div>
 </template>
 
@@ -168,6 +176,23 @@ watch(bey, value => {
 }, { deep: true })
 watch(step, value => { bey.value.activeStep = value })
 watch(dark, value => { document.documentElement.dataset.theme = value ? 'dark' : 'light' }, { immediate: true })
+
+const focusPart = computed(() => {
+  const isVisible = part => visibility.value[part.id] ?? !part.hidden
+  const shown = kit.value.parts.filter(isVisible)
+  return shown.length === 1 && shown.length < kit.value.parts.length ? shown[0] : null
+})
+const focus = computed(() => (focusPart.value ? (focusPart.value.role === 'locked' ? 'locked' : focusPart.value.role) : ''))
+
+watch(focusPart, part => {
+  if (!part) { lockedHint.value = ''; return }
+  if (part.role === 'locked') { lockedHint.value = part.label; selected.value = part.id; return }
+  lockedHint.value = ''
+  if (part.role === 'metal') { step.value = 1; bladeTab.value = 'metal' }
+  else if (part.role === 'base') { step.value = 1; bladeTab.value = 'base' }
+  else if (part.role === 'bit') step.value = 2
+  selected.value = part.id
+})
 
 const roleId = role => kit.value.parts.find(p => p.role === role)?.id ?? ''
 

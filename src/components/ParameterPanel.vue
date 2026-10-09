@@ -4,7 +4,9 @@
       <strong>🔒 {{ lockedHint }}</strong>
       <span>Dieses Teil ist fest. Es sorgt dafür, dass Starter, Ring und Bit zusammenpassen, und kann deshalb nicht verändert werden.</span>
     </div>
-    <template v-if="step === 1">
+    <template v-if="focus === 'locked'"></template>
+    <template v-else-if="step === 1">
+      <template v-if="!focus">
       <div class="field">
         <label for="bey-name">Name</label>
         <input id="bey-name" v-model="bey.name" maxlength="32" />
@@ -30,9 +32,10 @@
       <div class="subtabs" role="tablist">
         <button v-for="tab in bladeTabs" :key="tab.id" type="button" role="tab" :aria-selected="bladeTab === tab.id" :class="{ active: bladeTab === tab.id }" @click="bladeTab = tab.id">{{ tab.label }}</button>
       </div>
+      </template>
 
       <template v-if="bladeTab === 'metal'">
-        <div class="info-box"><strong>🎨 Gewichtsring</strong><span>Der äußere Ring trägt das Gewicht und die Angriffskanten. Die drei Zapfen und die Innenkante zum Oberring bleiben automatisch erhalten.</span></div>
+        <div class="info-box"><strong>🎨 {{ labelOf('metal') }}</strong><span>Der äußere Ring trägt das Gewicht und die Angriffskanten. Der Innenbereich, an dem die festen Teile andocken, bleibt automatisch erhalten.</span></div>
         <RangeInput v-model="bey.metal.diameter" label="Durchmesser" :min="kit.limits.metalDiameter[0]" :max="kit.limits.metalDiameter[1]" :step="0.5" suffix=" mm" />
         <RangeInput v-model="bey.metal.wings" label="Flügel" :min="1" :max="12" :step="1" />
         <RangeInput v-model="bey.metal.wingLength" label="Flügellänge" :min="0" :max="6" :step="0.1" suffix=" mm" />
@@ -45,7 +48,7 @@
       </template>
 
       <template v-else-if="bladeTab === 'base'">
-        <div class="info-box"><strong>🎨 Basis</strong><span>Die Basis sitzt unter dem Ring. Ihre Zinken zeigen nach unten Richtung Arena. Nabe, Bit-Aufnahme und Zapfenlöcher bleiben fest.</span></div>
+        <div class="info-box"><strong>🎨 {{ labelOf('base') }}</strong><span>Die Basis sitzt unter dem Ring. Ihre Zinken zeigen nach unten Richtung Arena. Nabe und Bit-Aufnahme bleiben fest.</span></div>
         <RangeInput v-model="bey.base.diameter" label="Durchmesser" :min="kit.limits.baseDiameter[0]" :max="kit.limits.baseDiameter[1]" :step="0.5" suffix=" mm" />
         <RangeInput v-model="bey.base.spikes" label="Zinken" :min="1" :max="16" :step="1" />
         <RangeInput v-model="bey.base.spikeLength" label="Zinkenüberstand" :min="0" :max="5" :step="0.1" suffix=" mm" />
@@ -55,16 +58,17 @@
         <RangeInput v-model="bey.base.sweep" label="Zinkenform (stumpf ↔ scharf)" :min="-1" :max="1" :step="0.05" :display="signed" />
       </template>
 
-      <template v-else>
-        <div class="info-box"><strong>🕳️ Löcher & Aussparungen</strong><span>Löcher sparen Gewicht und verschieben den Schwerpunkt. Im 🔒 Schnittstellenbereich werden sie automatisch ausgelassen.</span></div>
-        <div v-for="(hole, index) in bey.holes" :key="hole.id" class="hole-card">
+      <template v-if="bladeTab === 'holes' || focus">
+        <div v-if="!focus" class="info-box"><strong>🕳️ Löcher & Aussparungen</strong><span>Löcher sparen Gewicht und verschieben den Schwerpunkt. Im 🔒 Schnittstellenbereich werden sie automatisch ausgelassen.</span></div>
+        <span v-else class="focus-section">🕳️ Löcher</span>
+        <div v-for="(hole, index) in holeList" :key="hole.id" class="hole-card">
           <div class="hole-head">
             <strong>Loch {{ index + 1 }}</strong>
-            <button type="button" class="link-button" @click="bey.holes.splice(index, 1)">Entfernen</button>
+            <button type="button" class="link-button" @click="bey.holes.splice(bey.holes.indexOf(hole), 1)">Entfernen</button>
           </div>
-          <div class="segmented">
-            <button type="button" :class="{ active: hole.target === 'metal' }" @click="hole.target = 'metal'">Gewichtsring</button>
-            <button type="button" :class="{ active: hole.target === 'base' }" @click="hole.target = 'base'">Basis</button>
+          <div v-if="!focus" class="segmented">
+            <button type="button" :class="{ active: hole.target === 'metal' }" @click="hole.target = 'metal'">{{ labelOf('metal') }}</button>
+            <button type="button" :class="{ active: hole.target === 'base' }" @click="hole.target = 'base'">{{ labelOf('base') }}</button>
           </div>
           <div class="segmented three">
             <button v-for="shape in holeShapes" :key="shape.id" type="button" :class="{ active: hole.shape === shape.id }" @click="hole.shape = shape.id">{{ shape.label }}</button>
@@ -75,7 +79,7 @@
           <RangeInput v-model="hole.angle" label="Drehung" :min="0" :max="360" :step="1" suffix="°" />
           <p v-if="holeState(hole)" class="hole-warning">{{ holeState(hole) }}</p>
         </div>
-        <button type="button" class="secondary add-button" @click="bey.holes.push(createHole('metal', kit))">＋ Loch hinzufügen</button>
+        <button type="button" class="secondary add-button" @click="bey.holes.push(createHole(focus || 'metal', kit))">＋ Loch hinzufügen</button>
       </template>
     </template>
 
@@ -100,7 +104,7 @@
         <div><span>Gewicht ({{ bey.print.material }})</span><strong>{{ stats.weight.toFixed(1) }} g</strong></div>
         <div><span>Durchmesser</span><strong>{{ stats.diameter.toFixed(1) }} mm</strong></div>
         <div><span>Höhe gesamt</span><strong>{{ stats.height.toFixed(1) }} mm</strong></div>
-        <div><span>Gewichtsring</span><strong>{{ bey.metal.wings }} Flügel · {{ bey.holes.filter(h => h.target === 'metal').length }} Lochgruppen</strong></div>
+        <div><span>{{ labelOf('metal') }}</span><strong>{{ bey.metal.wings }} Flügel · {{ bey.holes.filter(h => h.target === 'metal').length }} Lochgruppen</strong></div>
         <div><span>Grundlage</span><strong>{{ kit.name }}</strong></div>
         <div><span>Bit</span><strong>{{ bitLabel }}</strong></div>
       </div>
@@ -139,16 +143,18 @@ const props = defineProps({
   warnings: { type: Array, default: () => [] },
   bladeTab: { type: String, default: 'metal' },
   selected: { type: String, default: '' },
-  lockedHint: { type: String, default: '' }
+  lockedHint: { type: String, default: '' },
+  focus: { type: String, default: '' }
 })
 
 const emit = defineEmits(['update:bladeTab', 'kit'])
 const bladeTab = computed({ get: () => props.bladeTab, set: v => emit('update:bladeTab', v) })
-const bladeTabs = [
-  { id: 'metal', label: 'Gewichtsring' },
-  { id: 'base', label: 'Basis' },
+const labelOf = role => props.kit.parts.find(p => p.role === role)?.label ?? role
+const bladeTabs = computed(() => [
+  { id: 'metal', label: labelOf('metal') },
+  { id: 'base', label: labelOf('base') },
   { id: 'holes', label: 'Löcher' }
-]
+])
 const types = [
   { id: 'attack', label: 'Angriff', icon: '⚔️' },
   { id: 'defense', label: 'Verteidigung', icon: '🛡️' },
@@ -157,6 +163,7 @@ const types = [
 ]
 const bitShapes = BIT_SHAPES
 const holeShapes = HOLE_SHAPES
+const holeList = computed(() => (props.focus ? props.bey.holes.filter(h => h.target === props.focus) : props.bey.holes))
 const holeRange = computed(() => [Math.min(props.kit.zones.metal.rKeep, props.kit.zones.base.plate.rKeep) + 0.5, props.kit.limits.metalDiameter[1] / 2])
 const bitLabel = computed(() => bitShapes.find(item => item.id === props.bey.bit.shape)?.label ?? props.bey.bit.shape)
 
