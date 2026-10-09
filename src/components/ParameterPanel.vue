@@ -1,5 +1,9 @@
 <template>
   <section class="panel">
+    <div v-if="lockedHint" class="info-box locked locked-hint">
+      <strong>🔒 {{ lockedHint }}</strong>
+      <span>Dieses Teil ist fest. Es sorgt dafür, dass Starter, Ring und Bit zusammenpassen, und kann deshalb nicht verändert werden.</span>
+    </div>
     <template v-if="step === 1">
       <div class="field">
         <label for="bey-name">Name</label>
@@ -76,22 +80,6 @@
     </template>
 
     <template v-else-if="step === 2">
-      <div class="info-box locked"><strong>🔒 Grundlage: {{ kit.name }}</strong><span>Alle Teile, an denen Starter, Ratchet und Bit andocken, werden 1:1 übernommen. Ring, Basis und Bit-Spitze gestaltest du selbst.</span></div>
-      <div v-if="kits.length > 1" class="ratchet-grid">
-        <button v-for="item in kits" :key="item.id" type="button" :class="{ active: kit.id === item.id }" @click="emit('kit', item.id)">
-          <strong>{{ item.name }}</strong>
-          <small v-if="item.ratchet">Ratchet {{ item.ratchet.label }}</small>
-        </button>
-      </div>
-      <div class="locked-list">
-        <span>Unveränderbare Kit-Teile</span>
-        <ul>
-          <li v-for="part in lockedParts" :key="part.id" :class="{ selected: selected === part.id }">🔒 {{ part.label }}</li>
-        </ul>
-      </div>
-    </template>
-
-    <template v-else-if="step === 3">
       <div class="info-box"><strong>Bit</strong><span>🔒 Oberer Anschluss und Flansch bleiben fest, damit der Bit in den Ratchet einrastet. 🎨 Alles unterhalb des Flansches ist gestaltbar.</span></div>
       <div class="bit-grid">
         <button v-for="item in bitShapes" :key="item.id" type="button" :class="{ active: bey.bit.shape === item.id }" @click="bey.bit.shape = item.id">
@@ -113,7 +101,7 @@
         <div><span>Durchmesser</span><strong>{{ stats.diameter.toFixed(1) }} mm</strong></div>
         <div><span>Höhe gesamt</span><strong>{{ stats.height.toFixed(1) }} mm</strong></div>
         <div><span>Gewichtsring</span><strong>{{ bey.metal.wings }} Flügel · {{ bey.holes.filter(h => h.target === 'metal').length }} Lochgruppen</strong></div>
-        <div><span>Kit</span><strong>{{ kit.name }}</strong></div>
+        <div><span>Grundlage</span><strong>{{ kit.name }}</strong></div>
         <div><span>Bit</span><strong>{{ bitLabel }}</strong></div>
       </div>
       <div class="field">
@@ -124,6 +112,12 @@
       </div>
       <div v-if="warnings.length" class="warning-list">
         <p v-for="(w, i) in warnings" :key="i" :class="w.level">⚠️ {{ w.text }}</p>
+      </div>
+      <div v-if="kits.length > 1" class="field">
+        <label>Grundlage (nur lokal sichtbar)</label>
+        <div class="segmented">
+          <button v-for="item in kits" :key="item.id" type="button" :class="{ active: kit.id === item.id }" @click="emit('kit', item.id)">{{ item.name }}</button>
+        </div>
       </div>
       <div class="info-box"><strong>Export</strong><span>Eine ZIP-Datei mit allen Teilen als STL, jeweils in Druckausrichtung, plus Assembly.stl nur für die Vorschau. Laut Kit: 100 % Infill und Stützstrukturen verwenden.</span></div>
     </template>
@@ -144,7 +138,8 @@ const props = defineProps({
   stats: { type: Object, required: true },
   warnings: { type: Array, default: () => [] },
   bladeTab: { type: String, default: 'metal' },
-  selected: { type: String, default: '' }
+  selected: { type: String, default: '' },
+  lockedHint: { type: String, default: '' }
 })
 
 const emit = defineEmits(['update:bladeTab', 'kit'])
@@ -162,7 +157,6 @@ const types = [
 ]
 const bitShapes = BIT_SHAPES
 const holeShapes = HOLE_SHAPES
-const lockedParts = computed(() => props.kit.parts.filter(p => p.role === 'locked'))
 const holeRange = computed(() => [Math.min(props.kit.zones.metal.rKeep, props.kit.zones.base.plate.rKeep) + 0.5, props.kit.limits.metalDiameter[1] / 2])
 const bitLabel = computed(() => bitShapes.find(item => item.id === props.bey.bit.shape)?.label ?? props.bey.bit.shape)
 

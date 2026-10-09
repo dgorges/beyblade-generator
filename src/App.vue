@@ -51,11 +51,11 @@
           </button>
         </nav>
 
-        <ParameterPanel v-model:blade-tab="bladeTab" :bey="bey" :kits="kitList" @kit="switchKit" :step="step" :kit="kit" :stats="stats" :warnings="warnings" :selected="selected" />
+        <ParameterPanel v-model:blade-tab="bladeTab" :bey="bey" :kits="kitList" :locked-hint="lockedHint" @kit="switchKit" :step="step" :kit="kit" :stats="stats" :warnings="warnings" :selected="selected" />
 
         <div class="wizard-actions">
           <button class="secondary" type="button" :disabled="step === 1" @click="step--">← Zurück</button>
-          <button v-if="step < 4" class="primary" type="button" @click="step++">Weiter →</button>
+          <button v-if="step < stepLabels.length" class="primary" type="button" @click="step++">Weiter →</button>
           <button v-else class="primary" type="button" :disabled="!design || busy" @click="exportAll">⬇ STL-Paket (ZIP)</button>
         </div>
 
@@ -86,12 +86,13 @@ const kit = computed(() => kits[bey.value.kit] ?? kits[DEFAULT_KIT])
 const kitList = Object.values(kits).filter(k => k.bundled || import.meta.env.DEV)
 const notice = ref('')
 const dark = ref(window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false)
-const step = ref(bey.value.activeStep || 1)
+const stepLabels = ['BLADE', 'BIT', 'FERTIG']
+const step = ref(Math.min(bey.value.activeStep || 1, stepLabels.length))
+const lockedHint = ref('')
 const exploded = ref(false)
 const visibility = ref({})
 const selected = ref('')
 const bladeTab = ref('metal')
-const stepLabels = ['BLADE', 'KIT', 'BIT', 'FERTIG']
 
 const locked = shallowRef(null)
 const heights = shallowRef(null)
@@ -171,10 +172,15 @@ watch(dark, value => { document.documentElement.dataset.theme = value ? 'dark' :
 const roleId = role => kit.value.parts.find(p => p.role === role)?.id ?? ''
 
 function selectPart(part) {
+  if (part.role === 'locked') {
+    lockedHint.value = part.label
+    selected.value = part.id
+    return
+  }
+  lockedHint.value = ''
   if (part.role === 'metal') { step.value = 1; bladeTab.value = 'metal' }
   else if (part.role === 'base') { step.value = 1; bladeTab.value = 'base' }
-  else if (part.role === 'bit') step.value = 3
-  else step.value = 2
+  else if (part.role === 'bit') step.value = 2
   selected.value = part.id
 }
 
@@ -188,14 +194,13 @@ function resetBey() {
 function switchKit(id) {
   if (id === bey.value.kit) return
   if (!confirm(`Zum Kit „${kits[id].name}“ wechseln? Ring, Basis und Bit werden auf die Startwerte dieses Kits zurückgesetzt.`)) return
-  bey.value = { ...createDefaultBey(id), name: bey.value.name, rotation: bey.value.rotation, activeStep: 2 }
+  bey.value = { ...createDefaultBey(id), name: bey.value.name, rotation: bey.value.rotation, activeStep: 3 }
 }
 
 watch([step, bladeTab], ([s, tab]) => {
-  const current = kit.value.parts.find(p => p.id === selected.value)
+  lockedHint.value = ''
   if (s === 1) selected.value = tab === 'base' ? roleId('base') : tab === 'metal' ? roleId('metal') : ''
-  else if (s === 2) selected.value = current?.role === 'locked' ? current.id : ''
-  else if (s === 3) selected.value = roleId('bit')
+  else if (s === 2) selected.value = roleId('bit')
   else selected.value = ''
 })
 
@@ -219,7 +224,7 @@ async function importProject(event) {
   if (!file) return
   try {
     bey.value = normalizeProject(await readJsonFile(file))
-    step.value = bey.value.activeStep || 1
+    step.value = Math.min(bey.value.activeStep || 1, stepLabels.length)
   } catch (e) {
     alert(e.message || 'Die Projektdatei konnte nicht geladen werden.')
   } finally { event.target.value = '' }

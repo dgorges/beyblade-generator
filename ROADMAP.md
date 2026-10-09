@@ -1,7 +1,7 @@
 # Roadmap
 
 ## v3, aktuell (0.3.x): Kit-basiert
-- Grundlage ist standardmäßig **Wizard Rod**. **Iron Forest** ist lokal als zweite Grundlage verfügbar (Umschalten in Schritt 2).
+- Grundlage ist standardmäßig **Wizard Rod**. **Iron Forest** ist lokal als zweite Grundlage verfügbar (Umschalten lokal im Schritt „Fertig“).
 - Die 🔒 Schnittstellenteile kommen 1:1 aus dem jeweiligen Kit (`public/kits/<kit>/`).
 - 🎨 Generiert werden Gewichtsring, Basis mit Zinken, Bit-Spitze und Löcher.
 - Teile lassen sich ein- und ausblenden, ein Klick auf ein Teil öffnet den passenden Schritt, und der Start ist minimal.

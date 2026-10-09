@@ -15,7 +15,7 @@ Optional lässt sich lokal **Iron Forest 4-80 High Needle** als zweite Grundlage
 npm run kit:extract
 ```
 
-Iron Forest erscheint nur in der lokalen Entwicklungsumgebung. Fehlt es, wechselt die App automatisch zu Wizard Rod.
+Iron Forest erscheint nur in der lokalen Entwicklungsumgebung (Auswahl im Schritt „Fertig“). Fehlt es, wechselt die App automatisch zu Wizard Rod.
 
 ## Entwicklung
 ```bash
