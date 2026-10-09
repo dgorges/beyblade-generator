@@ -1,6 +1,6 @@
 <template>
   <div class="gate">
-    <button class="theme-button gate-theme" type="button" @click="toggle" :aria-label="dark ? 'Lightmode' : 'Darkmode'">{{ dark ? '☀️' : '🌙' }}</button>
+    <button class="theme-button gate-theme" type="button" @click="toggle" :aria-label="dark ? 'Lightmode' : 'Darkmode'" :title="dark ? 'Lightmode' : 'Darkmode'"><AppIcon name="palette-color" /></button>
     <form class="gate-card" @submit.prevent="submit">
       <div class="brand-mark">BX</div>
       <h1>Beyblade Creator</h1>
@@ -15,6 +15,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useTheme } from '../composables/useTheme.js'
+import AppIcon from './AppIcon.vue'
 
 const props = defineProps({ salt: { type: String, required: true }, hash: { type: String, required: true } })
 const emit = defineEmits(['unlock'])

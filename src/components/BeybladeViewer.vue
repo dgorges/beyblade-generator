@@ -2,15 +2,15 @@
   <div class="viewer-wrap">
     <div ref="container" class="viewer" @pointermove="onHover" @pointerleave="hovered = null" @pointerdown="onDown" @pointerup="onUp"></div>
     <div class="viewer-toolbar" role="toolbar" aria-label="Ansicht">
-      <button type="button" @click="fit()" title="Modell einpassen">⤢ Einpassen</button>
+      <button type="button" @click="fit()" title="Modell einpassen"><AppIcon name="zoom-in" /> Einpassen</button>
       <button type="button" @click="setView('iso')" title="3D-Ansicht">3D</button>
       <button type="button" @click="setView('top')" title="Draufsicht">Oben</button>
       <button type="button" @click="setView('side')" title="Seitenansicht">Seite</button>
       <button type="button" @click="setView('bottom')" title="Untersicht">Unten</button>
-      <button type="button" :class="{ active: spin }" @click="spin = !spin" title="Automatisch drehen">↻ Drehen</button>
-      <button type="button" :class="{ active: showLocks }" @click="showLocks = !showLocks" title="Gesperrte Schnittstellenteile hervorheben">🔒 Schnittstellen</button>
+      <button type="button" :class="{ active: spin }" @click="spin = !spin" title="Automatisch drehen"><AppIcon name="refresh" /> Drehen</button>
+      <button type="button" :class="{ active: showLocks }" @click="showLocks = !showLocks" title="Gesperrte Schnittstellenteile hervorheben"><AppIcon name="lock" /> Schnittstellen</button>
       <div class="parts-panel" :class="{ open: partsOpen }">
-        <button type="button" class="parts-toggle" @click="partsOpen = !partsOpen">👁 Teile {{ partsOpen ? '▴' : '▾' }}</button>
+        <button type="button" class="parts-toggle" @click="partsOpen = !partsOpen"><AppIcon name="show" /> Teile <AppIcon :name="partsOpen ? 'chevron-up' : 'chevron-down'" /></button>
         <div v-if="partsOpen" class="parts-body">
           <div class="parts-actions">
             <button type="button" @click="$emit('visibility', {})">Alle</button>
@@ -21,9 +21,9 @@
             <div v-for="part in kit.parts.filter(p => p.group === group.id)" :key="part.id" class="parts-row" :class="{ selected: selected === part.id }">
               <label>
                 <input type="checkbox" :checked="isVisible(part)" @change="toggle(part, $event.target.checked)">
-                <span>{{ part.role === 'locked' ? '🔒' : '🎨' }} {{ part.label }}</span>
+                <span><AppIcon :name="part.role === 'locked' ? 'lock' : 'edit'" /> {{ part.label }}</span>
               </label>
-              <button type="button" title="Nur dieses Teil zeigen" @click="solo(part)">◎</button>
+              <button type="button" title="Nur dieses Teil zeigen" @click="solo(part)"><AppIcon name="search" /></button>
             </div>
           </template>
         </div>
@@ -31,7 +31,7 @@
     </div>
     <div v-if="hovered" class="viewer-tooltip">
       <strong>{{ hovered.label }} <small>– klicken zum Bearbeiten</small></strong>
-      <span>{{ hovered.role === 'locked' ? '🔒 Schnittstelle – unveränderbar' : '🎨 Designteil – gestaltbar' }}</span>
+      <span><AppIcon :name="hovered.role === 'locked' ? 'lock' : 'edit'" /> {{ hovered.role === 'locked' ? 'Schnittstelle – unveränderbar' : 'Designteil – gestaltbar' }}</span>
     </div>
     <div v-if="busy" class="viewer-busy">Berechne Geometrie …</div>
     <p class="viewer-hint">Klick auf ein Teil: bearbeiten · Ziehen: drehen · Rechte Maustaste / Shift: verschieben · Mausrad: zoomen</p>
@@ -41,6 +41,7 @@
 <script setup>
 import { onMounted, onBeforeUnmount, watch, ref } from 'vue'
 import * as THREE from 'three'
+import AppIcon from './AppIcon.vue'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 
@@ -335,5 +336,28 @@ onBeforeUnmount(() => {
   renderer?.dispose()
 })
 
-defineExpose({ fit, setView })
+function snapshot({ title = '', subtitle = '' } = {}) {
+  return new Promise(resolve => {
+    renderer.render(scene, camera)
+    const source = renderer.domElement
+    const width = 1080
+    const height = Math.round(width * (source.height / source.width))
+    const canvas = document.createElement('canvas')
+    canvas.width = width
+    canvas.height = height + 140
+    const ctx = canvas.getContext('2d')
+    ctx.fillStyle = props.dark ? '#0f172a' : '#eef2f7'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    ctx.drawImage(source, 0, 0, width, height)
+    ctx.fillStyle = props.dark ? '#f8fafc' : '#0f172a'
+    ctx.font = '700 48px Inter, system-ui, sans-serif'
+    ctx.fillText(title, 40, height + 68)
+    ctx.fillStyle = '#6366f1'
+    ctx.font = '600 26px Inter, system-ui, sans-serif'
+    ctx.fillText(subtitle, 40, height + 112)
+    canvas.toBlob(resolve, 'image/png')
+  })
+}
+
+defineExpose({ fit, setView, snapshot })
 </script>

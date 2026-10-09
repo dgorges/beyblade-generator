@@ -6,9 +6,10 @@
         <div><h1>Beyblade Creator</h1><span>Kit: {{ kit.name }}</span></div>
       </div>
       <div class="top-actions">
-        <button class="ghost-button" type="button" @click="resetBey">✨ Neu</button>
-        <button class="ghost-button" type="button" @click="randomize">🎲 Zufall</button>
-        <button class="theme-button" type="button" @click="dark = !dark" :aria-label="dark ? 'Lightmode' : 'Darkmode'">{{ dark ? '☀️' : '🌙' }}</button>
+        <button class="ghost-button" type="button" @click="resetBey"><AppIcon name="circle-add" /> Neu</button>
+        <button class="ghost-button" type="button" :disabled="!design" @click="openShare"><AppIcon name="share" /> Teilen</button>
+        <button class="ghost-button" type="button" @click="randomize"><AppIcon name="shuffle" /> Zufall</button>
+        <button class="theme-button" type="button" @click="dark = !dark" :aria-label="dark ? 'Lightmode' : 'Darkmode'" :title="dark ? 'Lightmode' : 'Darkmode'"><AppIcon name="palette-color" /></button>
       </div>
     </header>
 
@@ -24,18 +25,18 @@
           </div>
         </div>
 
-        <div v-if="notice" class="kit-notice" role="status">{{ notice }} <button type="button" @click="notice = ''">✕</button></div>
+        <div v-if="notice" class="kit-notice" role="status">{{ notice }} <button type="button" @click="notice = ''" aria-label="Schließen"><AppIcon name="close-x" /></button></div>
         <div v-if="error" class="viewer-error">
           <strong>Kit-Dateien nicht gefunden</strong>
           <span>{{ error }}</span>
         </div>
-        <BeybladeViewer v-else :key="kit.id" :kit="kit" :heights="heights" :locked="locked" :design="design" :type="bey.type" :dark="dark" :exploded="exploded" :busy="busy" :visibility="visibility" :selected="selected" @visibility="visibility = $event" @select="selectPart" />
+        <BeybladeViewer v-else ref="viewer" :key="kit.id" :kit="kit" :heights="heights" :locked="locked" :design="design" :type="bey.type" :dark="dark" :exploded="exploded" :busy="busy" :visibility="visibility" :selected="selected" @visibility="visibility = $event" @select="selectPart" />
 
         <div class="stats">
-          <div><span>⚖️ Gewicht</span><strong>{{ stats.weight.toFixed(1) }} g</strong></div>
-          <div><span>⌀ Durchmesser</span><strong>{{ stats.diameter.toFixed(1) }} mm</strong></div>
-          <div><span>↕ Höhe</span><strong>{{ stats.height.toFixed(1) }} mm</strong></div>
-          <div><span>⚔️ / 🛡️ / 🌀</span><strong>{{ rating.attack }} / {{ rating.defense }} / {{ rating.stamina }}</strong></div>
+          <div><span><AppIcon name="tag" /> Gewicht</span><strong>{{ stats.weight.toFixed(1) }} g</strong></div>
+          <div><span><AppIcon name="grid-aspect-ratio" /> Durchmesser</span><strong>{{ stats.diameter.toFixed(1) }} mm</strong></div>
+          <div><span><AppIcon name="sort" /> Höhe</span><strong>{{ stats.height.toFixed(1) }} mm</strong></div>
+          <div title="Angriff / Verteidigung / Ausdauer"><span><AppIcon name="star" /> Werte A / V / Au</span><strong>{{ rating.attack }} / {{ rating.defense }} / {{ rating.stamina }}</strong></div>
         </div>
       </section>
 
@@ -46,7 +47,7 @@
         </div>
 
         <div v-if="focus" class="focus-bar">
-          <span>🔍 Fokus: <strong>{{ focusPart.label }}</strong></span>
+          <span><AppIcon name="search" /> Fokus: <strong>{{ focusPart.label }}</strong></span>
           <button type="button" class="secondary" @click="visibility = {}">Alle Teile zeigen</button>
         </div>
         <nav v-else class="stepper" aria-label="Beyblade Komponenten">
@@ -58,19 +59,22 @@
         <ParameterPanel v-model:blade-tab="bladeTab" :bey="bey" :kits="kitList" :locked-hint="lockedHint" :focus="focus" @kit="switchKit" :step="step" :kit="kit" :stats="stats" :warnings="warnings" :selected="selected" />
 
         <div v-if="!focus" class="wizard-actions">
-          <button class="secondary" type="button" :disabled="step === 1" @click="step--">← Zurück</button>
-          <button v-if="step < stepLabels.length" class="primary" type="button" @click="step++">Weiter →</button>
-          <button v-else class="primary" type="button" :disabled="!design || busy" @click="exportAll">⬇ STL-Paket (ZIP)</button>
+          <button class="secondary" type="button" :disabled="step === 1" @click="step--"><AppIcon name="chevron-left" /> Zurück</button>
+          <button v-if="step < stepLabels.length" class="primary" type="button" @click="step++">Weiter <AppIcon name="chevron-right" /></button>
+          <button v-else class="primary" type="button" :disabled="!design || busy" @click="exportAll"><AppIcon name="download" /> STL-Paket (ZIP)</button>
         </div>
 
         <div class="project-actions">
-          <button class="secondary" type="button" @click="downloadJson(bey)">💾 Projekt speichern</button>
-          <label class="secondary file-button">📂 Projekt laden<input type="file" accept=".json,application/json" @change="importProject"></label>
+          <button class="secondary share-wide" type="button" :disabled="!design" @click="openShare"><AppIcon name="share" /> Teilen per WhatsApp oder E-Mail</button>
+          <button class="secondary" type="button" @click="downloadJson(bey)"><AppIcon name="download" /> Projekt speichern</button>
+          <label class="secondary file-button"><AppIcon name="folder-open" /> Projekt laden<input type="file" accept=".json,application/json" @change="importProject"></label>
         </div>
 
-        <p class="prototype-note"><strong>Hinweis:</strong> Grundlage ist das Modell „{{ kit.name }}“. Die 🔒 Schnittstellenteile werden unverändert übernommen. Die Werte zu Angriff, Verteidigung und Ausdauer sind nur grobe Schätzungen aus der Geometrie. Gedruckte Kreisel drehen sehr schnell und können brechen: nur unter Aufsicht spielen.</p>
+        <p class="prototype-note"><strong>Hinweis:</strong> Grundlage ist das Modell „{{ kit.name }}“. Die festen Schnittstellenteile werden unverändert übernommen. Die Werte zu Angriff, Verteidigung und Ausdauer sind nur grobe Schätzungen aus der Geometrie. Gedruckte Kreisel drehen sehr schnell und können brechen: nur unter Aufsicht spielen.</p>
       </aside>
     </main>
+
+    <ShareDialog v-if="shareOpen" :bey="bey" :image="shareImage" @close="shareOpen = false" />
 
     <footer class="site-footer">
       Nicht-kommerzielles Spaßprojekt. Code und Inhalte wurden mit KI generiert.
@@ -82,6 +86,9 @@
 import { computed, onMounted, ref, shallowRef, watch } from 'vue'
 import BeybladeViewer from './components/BeybladeViewer.vue'
 import ParameterPanel from './components/ParameterPanel.vue'
+import AppIcon from './components/AppIcon.vue'
+import ShareDialog from './components/ShareDialog.vue'
+import { readSharedProject, clearSharedProject } from './utils/share.js'
 import { createDefaultBey, normalizeProject, presetFor, PRESETS, BIT_SHAPES } from './models/BeyParameters.js'
 import { downloadJson, readJsonFile, saveLocal, loadLocal } from './utils/projectFile.js'
 import { exportZip } from './utils/stl.js'
@@ -94,10 +101,30 @@ const bey = ref(normalizeProject(loadLocal() ?? createDefaultBey()))
 const kit = computed(() => kits[bey.value.kit] ?? kits[DEFAULT_KIT])
 const kitList = Object.values(kits).filter(k => k.bundled || import.meta.env.DEV)
 const notice = ref('')
+const viewer = ref(null)
+const shareOpen = ref(false)
+const shareImage = shallowRef(null)
+
+async function openShare() {
+  shareImage.value = null
+  shareOpen.value = true
+  shareImage.value = await viewer.value?.snapshot({ title: bey.value.name, subtitle: 'Beyblade Creator' }) ?? null
+}
+
 const { dark } = useTheme()
 const stepLabels = ['BLADE', 'BIT', 'FERTIG']
 const step = ref(Math.min(bey.value.activeStep || 1, stepLabels.length))
 const lockedHint = ref('')
+
+const shared = readSharedProject()
+if (shared) {
+  clearSharedProject()
+  if (confirm(`Geteiltes Beyblade „${shared.name || 'Beyblade'}“ öffnen? Dein aktuelles Design wird ersetzt.`)) {
+    bey.value = normalizeProject(shared)
+    step.value = 1
+    saveLocal(bey.value)
+  }
+}
 const exploded = ref(false)
 const visibility = ref({})
 const selected = ref('')

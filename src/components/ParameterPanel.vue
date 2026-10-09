@@ -1,7 +1,7 @@
 <template>
   <section class="panel">
     <div v-if="lockedHint" class="info-box locked locked-hint">
-      <strong>🔒 {{ lockedHint }}</strong>
+      <strong><AppIcon name="lock" /> {{ lockedHint }}</strong>
       <span>Dieses Teil ist fest. Es sorgt dafür, dass Starter, Ring und Bit zusammenpassen, und kann deshalb nicht verändert werden.</span>
     </div>
     <template v-if="focus === 'locked'"></template>
@@ -16,7 +16,7 @@
         <label>Grundform</label>
         <div class="type-grid">
           <button v-for="item in types" :key="item.id" type="button" :class="{ active: bey.type === item.id }" @click="applyType(item.id)">
-            <span>{{ item.icon }}</span>{{ item.label }}
+            <AppIcon :name="item.icon" />{{ item.label }}
           </button>
         </div>
       </div>
@@ -24,8 +24,8 @@
       <div class="field">
         <label>Drehrichtung</label>
         <div class="segmented">
-          <button type="button" :class="{ active: bey.rotation === 'right' }" @click="bey.rotation = 'right'">↻ Rechts</button>
-          <button type="button" :class="{ active: bey.rotation === 'left' }" @click="bey.rotation = 'left'">↺ Links</button>
+          <button type="button" :class="{ active: bey.rotation === 'right' }" @click="bey.rotation = 'right'"><AppIcon name="redo" /> Rechts</button>
+          <button type="button" :class="{ active: bey.rotation === 'left' }" @click="bey.rotation = 'left'"><AppIcon name="undo" /> Links</button>
         </div>
       </div>
 
@@ -35,7 +35,7 @@
       </template>
 
       <template v-if="bladeTab === 'metal'">
-        <div class="info-box"><strong>🎨 {{ labelOf('metal') }}</strong><span>Der äußere Ring trägt das Gewicht und die Angriffskanten. Der Innenbereich, an dem die festen Teile andocken, bleibt automatisch erhalten.</span></div>
+        <div class="info-box"><strong><AppIcon name="edit" /> {{ labelOf('metal') }}</strong><span>Der äußere Ring trägt das Gewicht und die Angriffskanten. Der Innenbereich, an dem die festen Teile andocken, bleibt automatisch erhalten.</span></div>
         <RangeInput v-model="bey.metal.diameter" label="Durchmesser" :min="kit.limits.metalDiameter[0]" :max="kit.limits.metalDiameter[1]" :step="0.5" suffix=" mm" />
         <RangeInput v-model="bey.metal.wings" label="Flügel" :min="1" :max="12" :step="1" />
         <RangeInput v-model="bey.metal.wingLength" label="Flügellänge" :min="0" :max="6" :step="0.1" suffix=" mm" />
@@ -48,7 +48,7 @@
       </template>
 
       <template v-else-if="bladeTab === 'base'">
-        <div class="info-box"><strong>🎨 {{ labelOf('base') }}</strong><span>Die Basis sitzt unter dem Ring. Ihre Zinken zeigen nach unten Richtung Arena. Nabe und Bit-Aufnahme bleiben fest.</span></div>
+        <div class="info-box"><strong><AppIcon name="edit" /> {{ labelOf('base') }}</strong><span>Die Basis sitzt unter dem Ring. Ihre Zinken zeigen nach unten Richtung Arena. Nabe und Bit-Aufnahme bleiben fest.</span></div>
         <RangeInput v-model="bey.base.diameter" label="Durchmesser" :min="kit.limits.baseDiameter[0]" :max="kit.limits.baseDiameter[1]" :step="0.5" suffix=" mm" />
         <RangeInput v-model="bey.base.spikes" label="Zinken" :min="1" :max="16" :step="1" />
         <RangeInput v-model="bey.base.spikeLength" label="Zinkenüberstand" :min="0" :max="5" :step="0.1" suffix=" mm" />
@@ -59,8 +59,8 @@
       </template>
 
       <template v-if="bladeTab === 'holes' || focus">
-        <div v-if="!focus" class="info-box"><strong>🕳️ Löcher & Aussparungen</strong><span>Löcher sparen Gewicht und verschieben den Schwerpunkt. Im 🔒 Schnittstellenbereich werden sie automatisch ausgelassen.</span></div>
-        <span v-else class="focus-section">🕳️ Löcher</span>
+        <div v-if="!focus" class="info-box"><strong><AppIcon name="circle-substract" /> Löcher & Aussparungen</strong><span>Löcher sparen Gewicht und verschieben den Schwerpunkt. Im Schnittstellenbereich werden sie automatisch ausgelassen.</span></div>
+        <span v-else class="focus-section"><AppIcon name="circle-substract" /> Löcher</span>
         <div v-for="(hole, index) in holeList" :key="hole.id" class="hole-card">
           <div class="hole-head">
             <strong>Loch {{ index + 1 }}</strong>
@@ -79,12 +79,12 @@
           <RangeInput v-model="hole.angle" label="Drehung" :min="0" :max="360" :step="1" suffix="°" />
           <p v-if="holeState(hole)" class="hole-warning">{{ holeState(hole) }}</p>
         </div>
-        <button type="button" class="secondary add-button" @click="bey.holes.push(createHole(focus || 'metal', kit))">＋ Loch hinzufügen</button>
+        <button type="button" class="secondary add-button" @click="bey.holes.push(createHole(focus || 'metal', kit))"><AppIcon name="circle-add" /> Loch hinzufügen</button>
       </template>
     </template>
 
     <template v-else-if="step === 2">
-      <div class="info-box"><strong>Bit</strong><span>🔒 Oberer Anschluss und Flansch bleiben fest, damit der Bit in den Ratchet einrastet. 🎨 Alles unterhalb des Flansches ist gestaltbar.</span></div>
+      <div class="info-box"><strong>Bit</strong><span>Oberer Anschluss und Flansch bleiben fest, damit der Bit in den Ratchet einrastet. Alles unterhalb des Flansches ist gestaltbar.</span></div>
       <div class="bit-grid">
         <button v-for="item in bitShapes" :key="item.id" type="button" :class="{ active: bey.bit.shape === item.id }" @click="bey.bit.shape = item.id">
           <strong>{{ item.label }}</strong><small>{{ item.description }}</small>
@@ -115,7 +115,7 @@
         </div>
       </div>
       <div v-if="warnings.length" class="warning-list">
-        <p v-for="(w, i) in warnings" :key="i" :class="w.level">⚠️ {{ w.text }}</p>
+        <p v-for="(w, i) in warnings" :key="i" :class="w.level"><AppIcon name="circle-info" /> {{ w.text }}</p>
       </div>
       <div v-if="kits.length > 1" class="field">
         <label>Grundlage (nur lokal sichtbar)</label>
@@ -131,6 +131,7 @@
 <script setup>
 import { computed } from 'vue'
 import RangeInput from './RangeInput.vue'
+import AppIcon from './AppIcon.vue'
 import { presetFor, BIT_SHAPES, HOLE_SHAPES, createHole } from '../models/BeyParameters.js'
 import { holeExtent } from '../geometry/shapes.js'
 
@@ -156,10 +157,10 @@ const bladeTabs = computed(() => [
   { id: 'holes', label: 'Löcher' }
 ])
 const types = [
-  { id: 'attack', label: 'Angriff', icon: '⚔️' },
-  { id: 'defense', label: 'Verteidigung', icon: '🛡️' },
-  { id: 'stamina', label: 'Ausdauer', icon: '🌀' },
-  { id: 'balance', label: 'Balance', icon: '⚖️' }
+  { id: 'attack', label: 'Angriff', icon: 'arrow-right-up' },
+  { id: 'defense', label: 'Verteidigung', icon: 'circle-block' },
+  { id: 'stamina', label: 'Ausdauer', icon: 'repeat' },
+  { id: 'balance', label: 'Balance', icon: 'components' }
 ]
 const bitShapes = BIT_SHAPES
 const holeShapes = HOLE_SHAPES
@@ -182,7 +183,7 @@ function holeState(hole) {
   const ext = holeExtent(hole)
   const inner = hole.target === 'metal' ? zones.metal.rKeep + 0.8 : zones.base.plate.rKeep + 0.8
   const outer = (hole.target === 'metal' ? props.bey.metal.diameter : props.bey.base.diameter) / 2 - 0.8
-  if (hole.radius - ext < inner) return '🔒 Liegt im Schnittstellenbereich und wird nicht ausgeschnitten. Weiter nach außen schieben.'
+  if (hole.radius - ext < inner) return 'Liegt im Schnittstellenbereich und wird nicht ausgeschnitten. Weiter nach außen schieben.'
   if (hole.radius + ext > outer) return 'Zu nah am Rand und wird nicht ausgeschnitten. Kleiner machen oder nach innen schieben.'
   const gap = (2 * Math.PI * hole.radius) / Math.max(1, hole.count) - 2 * ext
   if (gap < 0.8) return 'Löcher überlappen. Weniger Löcher oder kleinere Größe wählen.'

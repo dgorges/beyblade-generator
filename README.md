@@ -17,6 +17,12 @@ npm run kit:extract
 
 Iron Forest erscheint nur in der lokalen Entwicklungsumgebung (Auswahl im Schritt „Fertig“). Fehlt es, wechselt die App automatisch zu Wizard Rod.
 
+## Teilen
+„Teilen“ erzeugt ein Vorschaubild und einen Link, der das komplette Design komprimiert im URL-Hash (`#bey=…`) enthält. Öffnet jemand den Link, wird das Design nach Rückfrage geladen. WhatsApp und E-Mail verschicken den Link. Auf dem Handy schickt „Teilen …“ Bild und Projektdatei direkt über das System-Teilen-Menü.
+
+## Icons
+Die Icons stammen aus der Sammlung [Wave Oval Interface Icons](https://www.svgrepo.com/collection/wave-oval-interface-icons/) (CC0) und liegen in `src/assets/icons/`.
+
 ## Passwortschutz (GitHub Pages)
 Ist in GitHub unter Settings → Secrets and variables → Actions das Repository-Secret `APP_PASSWORD` gesetzt, baut die Action eine Passwortabfrage ein. Das Passwort selbst landet nicht im Build, nur ein PBKDF2-Hash. Der Browser merkt sich die Freigabe, bis sich das Passwort ändert. Lokal (`npm run dev`) gibt es keine Abfrage.
 
