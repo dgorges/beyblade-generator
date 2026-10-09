@@ -28,7 +28,7 @@
 @media (min-width: 1024px) {
     .b_controls {
         position: absolute;
-        top: var(--space-5);
+        top: var(--space-9);
         right: var(--space-5);
         z-index: 6;
         width: var(--panel-width);
