@@ -33,7 +33,7 @@
         z-index: 6;
         width: var(--panel-width);
         max-width: calc(100% - var(--space-5) * 2);
-        max-height: calc(100% - var(--space-5) * 2);
+        max-height: calc(100% - (var(--space-9) * 2) * 2);
         overflow: auto;
         overscroll-behavior: contain;
         background: var(--theme-surface-raised);

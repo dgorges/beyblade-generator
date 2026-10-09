@@ -138,7 +138,7 @@
     }
 
     .b_viewer__alignment {
-        right: calc(var(--panel-space) + var(--space-5));
+        right: var(--space-5);
         bottom: 36px;
     }
 
