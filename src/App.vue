@@ -52,7 +52,7 @@
 
       <button v-if="!panelOpen" type="button" class="b_button b_button--primary b_app__panel-open" aria-controls="controls-panel" :aria-expanded="panelOpen" @click="panelOpen = true"><AppIcon name="edit" /> Bearbeiten</button>
 
-      <aside v-show="panelOpen" id="controls-panel" class="b_card b_controls" aria-labelledby="controls-title">
+      <aside id="controls-panel" class="b_card b_controls" :class="{ 'b_controls--closed': !panelOpen }" aria-labelledby="controls-title">
         <div class="b_controls__heading">
           <div>
             <span class="b_eyebrow">BUILD YOUR BEY</span>

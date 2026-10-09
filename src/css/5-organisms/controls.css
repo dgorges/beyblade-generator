@@ -40,6 +40,10 @@
         backdrop-filter: blur(12px);
     }
 
+    .b_controls--closed {
+        display: none;
+    }
+
     .b_controls__close {
         display: inline-flex;
     }
