@@ -1,25 +1,6 @@
 <template>
   <div class="viewer-wrap">
     <div ref="container" class="viewer" @pointermove="onHover" @pointerleave="hovered = null" @pointerdown="onDown" @pointerup="onUp"></div>
-    <div class="parts-panel" :class="{ open: partsOpen }">
-      <button type="button" class="parts-toggle" @click="partsOpen = !partsOpen">👁 Teile {{ partsOpen ? '▴' : '▾' }}</button>
-      <div v-if="partsOpen" class="parts-body">
-        <div class="parts-actions">
-          <button type="button" @click="$emit('visibility', {})">Alle</button>
-          <button type="button" @click="onlyDesign">Nur Design</button>
-        </div>
-        <template v-for="group in kit.groups" :key="group.id">
-          <span class="parts-group">{{ group.label }}</span>
-          <div v-for="part in kit.parts.filter(p => p.group === group.id)" :key="part.id" class="parts-row" :class="{ selected: selected === part.id }">
-            <label>
-              <input type="checkbox" :checked="isVisible(part)" @change="toggle(part, $event.target.checked)">
-              <span>{{ part.role === 'locked' ? '🔒' : '🎨' }} {{ part.label }}</span>
-            </label>
-            <button type="button" title="Nur dieses Teil zeigen" @click="solo(part)">◎</button>
-          </div>
-        </template>
-      </div>
-    </div>
     <div class="viewer-toolbar" role="toolbar" aria-label="Ansicht">
       <button type="button" @click="fit()" title="Modell einpassen">⤢ Einpassen</button>
       <button type="button" @click="setView('iso')" title="3D-Ansicht">3D</button>
@@ -28,6 +9,25 @@
       <button type="button" @click="setView('bottom')" title="Untersicht">Unten</button>
       <button type="button" :class="{ active: spin }" @click="spin = !spin" title="Automatisch drehen">↻ Drehen</button>
       <button type="button" :class="{ active: showLocks }" @click="showLocks = !showLocks" title="Gesperrte Schnittstellenteile hervorheben">🔒 Schnittstellen</button>
+      <div class="parts-panel" :class="{ open: partsOpen }">
+        <button type="button" class="parts-toggle" @click="partsOpen = !partsOpen">👁 Teile {{ partsOpen ? '▴' : '▾' }}</button>
+        <div v-if="partsOpen" class="parts-body">
+          <div class="parts-actions">
+            <button type="button" @click="$emit('visibility', {})">Alle</button>
+            <button type="button" @click="onlyDesign">Nur Design</button>
+          </div>
+          <template v-for="group in kit.groups" :key="group.id">
+            <span class="parts-group">{{ group.label }}</span>
+            <div v-for="part in kit.parts.filter(p => p.group === group.id)" :key="part.id" class="parts-row" :class="{ selected: selected === part.id }">
+              <label>
+                <input type="checkbox" :checked="isVisible(part)" @change="toggle(part, $event.target.checked)">
+                <span>{{ part.role === 'locked' ? '🔒' : '🎨' }} {{ part.label }}</span>
+              </label>
+              <button type="button" title="Nur dieses Teil zeigen" @click="solo(part)">◎</button>
+            </div>
+          </template>
+        </div>
+      </div>
     </div>
     <div v-if="hovered" class="viewer-tooltip">
       <strong>{{ hovered.label }} <small>– klicken zum Bearbeiten</small></strong>

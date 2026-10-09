@@ -29,20 +29,20 @@
 
       <template v-if="bladeTab === 'metal'">
         <div class="info-box"><strong>🎨 Gewichtsring</strong><span>Der äußere Ring trägt das Gewicht und die Angriffskanten. Die drei Zapfen und die Innenkante zum Oberring bleiben automatisch erhalten.</span></div>
-        <RangeInput v-model="bey.metal.diameter" label="Durchmesser" :min="41" :max="50" :step="0.5" suffix=" mm" />
+        <RangeInput v-model="bey.metal.diameter" label="Durchmesser" :min="kit.limits.metalDiameter[0]" :max="kit.limits.metalDiameter[1]" :step="0.5" suffix=" mm" />
         <RangeInput v-model="bey.metal.wings" label="Flügel" :min="1" :max="12" :step="1" />
         <RangeInput v-model="bey.metal.wingLength" label="Flügellänge" :min="0" :max="6" :step="0.1" suffix=" mm" />
         <RangeInput v-model="bey.metal.wingWidth" label="Flügelbreite" :min="0.1" :max="0.95" :step="0.01" :display="percent" />
         <RangeInput v-model="bey.metal.sweep" label="Angriffskante (stumpf ↔ scharf)" :min="-1" :max="1" :step="0.05" :display="signed" />
-        <RangeInput v-model="bey.metal.height" label="Ringhöhe" :min="3" :max="7.9" :step="0.1" suffix=" mm" />
-        <RangeInput v-model="bey.metal.wallHeight" label="Flügel-Überhöhe" :min="0" :max="5" :step="0.1" suffix=" mm" />
+        <RangeInput v-model="bey.metal.height" label="Ringhöhe" :min="kit.limits.metalHeight[0]" :max="kit.limits.metalHeight[1]" :step="0.1" suffix=" mm" />
+        <RangeInput v-model="bey.metal.wallHeight" label="Flügel-Überhöhe" :min="kit.limits.wallHeight[0]" :max="kit.limits.wallHeight[1]" :step="0.1" suffix=" mm" />
         <RangeInput v-model="bey.metal.twist" label="Flügeldrall" :min="0" :max="30" :step="1" suffix="°" />
         <RangeInput v-model="bey.metal.bevel" label="Kantenfase" :min="0" :max="1.5" :step="0.05" suffix=" mm" />
       </template>
 
       <template v-else-if="bladeTab === 'base'">
         <div class="info-box"><strong>🎨 Basis</strong><span>Die Basis sitzt unter dem Ring. Ihre Zinken zeigen nach unten Richtung Arena. Nabe, Bit-Aufnahme und Zapfenlöcher bleiben fest.</span></div>
-        <RangeInput v-model="bey.base.diameter" label="Durchmesser" :min="41" :max="50" :step="0.5" suffix=" mm" />
+        <RangeInput v-model="bey.base.diameter" label="Durchmesser" :min="kit.limits.baseDiameter[0]" :max="kit.limits.baseDiameter[1]" :step="0.5" suffix=" mm" />
         <RangeInput v-model="bey.base.spikes" label="Zinken" :min="1" :max="16" :step="1" />
         <RangeInput v-model="bey.base.spikeLength" label="Zinkenüberstand" :min="0" :max="5" :step="0.1" suffix=" mm" />
         <RangeInput v-model="bey.base.spikeWidth" label="Zinkenbreite" :min="0.1" :max="0.9" :step="0.01" :display="percent" />
@@ -65,21 +65,22 @@
           <div class="segmented three">
             <button v-for="shape in holeShapes" :key="shape.id" type="button" :class="{ active: hole.shape === shape.id }" @click="hole.shape = shape.id">{{ shape.label }}</button>
           </div>
-          <RangeInput v-model="hole.radius" label="Abstand zur Mitte" :min="17" :max="25" :step="0.1" suffix=" mm" />
+          <RangeInput v-model="hole.radius" label="Abstand zur Mitte" :min="holeRange[0]" :max="holeRange[1]" :step="0.1" suffix=" mm" />
           <RangeInput v-model="hole.size" label="Größe" :min="0.8" :max="5" :step="0.1" suffix=" mm" />
           <RangeInput v-model="hole.count" label="Anzahl im Kreis" :min="1" :max="12" :step="1" />
           <RangeInput v-model="hole.angle" label="Drehung" :min="0" :max="360" :step="1" suffix="°" />
           <p v-if="holeState(hole)" class="hole-warning">{{ holeState(hole) }}</p>
         </div>
-        <button type="button" class="secondary add-button" @click="bey.holes.push(createHole('metal'))">＋ Loch hinzufügen</button>
+        <button type="button" class="secondary add-button" @click="bey.holes.push(createHole('metal', kit))">＋ Loch hinzufügen</button>
       </template>
     </template>
 
     <template v-else-if="step === 2">
-      <div class="info-box locked"><strong>🔒 Ratchet {{ kit.ratchet.label }}</strong><span>Der Ratchet verbindet Blade und Bit. Er ist eine technische Schnittstelle und wird 1:1 aus dem Kit übernommen. Andere Ratchets (z. B. 3-80) kommen als weitere Kits dazu.</span></div>
-      <div class="ratchet-grid">
-        <button type="button" class="active">
-          <strong>{{ kit.ratchet.label }}</strong><small>{{ kit.ratchet.lugs }} Vorsprünge · {{ kit.ratchet.height.toFixed(1) }} mm · {{ kit.name }}</small>
+      <div class="info-box locked"><strong>🔒 Grundlage: {{ kit.name }}</strong><span>Alle Teile, an denen Starter, Ratchet und Bit andocken, werden 1:1 übernommen. Ring, Basis und Bit-Spitze gestaltest du selbst.</span></div>
+      <div v-if="kits.length > 1" class="ratchet-grid">
+        <button v-for="item in kits" :key="item.id" type="button" :class="{ active: kit.id === item.id }" @click="emit('kit', item.id)">
+          <strong>{{ item.name }}</strong>
+          <small v-if="item.ratchet">Ratchet {{ item.ratchet.label }}</small>
         </button>
       </div>
       <div class="locked-list">
@@ -97,11 +98,13 @@
           <strong>{{ item.label }}</strong><small>{{ item.description }}</small>
         </button>
       </div>
-      <RangeInput v-model="bey.bit.bodyRadius" label="Schaftradius" :min="3" :max="7.6" :step="0.1" suffix=" mm" />
+      <RangeInput v-model="bey.bit.bodyRadius" label="Schaftradius" :min="3" :max="kit.limits.bitRadius" :step="0.1" suffix=" mm" />
       <RangeInput v-model="bey.bit.bodyLength" label="Schaftlänge" :min="1" :max="9" :step="0.1" suffix=" mm" />
-      <RangeInput v-model="bey.bit.tipRadius" label="Spitzenradius" :min="0.5" :max="7.6" :step="0.1" suffix=" mm" />
+      <RangeInput v-model="bey.bit.tipRadius" label="Spitzenradius" :min="0.5" :max="kit.limits.bitRadius" :step="0.1" suffix=" mm" />
       <RangeInput v-model="bey.bit.tipLength" label="Spitzenhöhe" :min="0.5" :max="8" :step="0.1" suffix=" mm" />
       <RangeInput v-model="bey.bit.ribs" label="Griffrippen" :min="0" :max="16" :step="1" />
+      <RangeInput v-model="bey.bit.diskRadius" label="Scheibe (Radius, 0 = keine)" :min="0" :max="kit.zones.bit.maxDisk" :step="0.1" suffix=" mm" />
+      <RangeInput v-if="bey.bit.diskRadius > 0" v-model="bey.bit.diskThickness" label="Scheibendicke" :min="1" :max="4" :step="0.1" suffix=" mm" />
     </template>
 
     <template v-else>
@@ -110,7 +113,7 @@
         <div><span>Durchmesser</span><strong>{{ stats.diameter.toFixed(1) }} mm</strong></div>
         <div><span>Höhe gesamt</span><strong>{{ stats.height.toFixed(1) }} mm</strong></div>
         <div><span>Gewichtsring</span><strong>{{ bey.metal.wings }} Flügel · {{ bey.holes.filter(h => h.target === 'metal').length }} Lochgruppen</strong></div>
-        <div><span>Ratchet</span><strong>{{ kit.ratchet.label }}</strong></div>
+        <div><span>Kit</span><strong>{{ kit.name }}</strong></div>
         <div><span>Bit</span><strong>{{ bitLabel }}</strong></div>
       </div>
       <div class="field">
@@ -130,20 +133,21 @@
 <script setup>
 import { computed } from 'vue'
 import RangeInput from './RangeInput.vue'
-import { PRESETS, BIT_SHAPES, HOLE_SHAPES, createHole } from '../models/BeyParameters.js'
+import { presetFor, BIT_SHAPES, HOLE_SHAPES, createHole } from '../models/BeyParameters.js'
 import { holeExtent } from '../geometry/shapes.js'
 
 const props = defineProps({
   bey: { type: Object, required: true },
   step: { type: Number, required: true },
   kit: { type: Object, required: true },
+  kits: { type: Array, default: () => [] },
   stats: { type: Object, required: true },
   warnings: { type: Array, default: () => [] },
   bladeTab: { type: String, default: 'metal' },
   selected: { type: String, default: '' }
 })
 
-const emit = defineEmits(['update:bladeTab'])
+const emit = defineEmits(['update:bladeTab', 'kit'])
 const bladeTab = computed({ get: () => props.bladeTab, set: v => emit('update:bladeTab', v) })
 const bladeTabs = [
   { id: 'metal', label: 'Gewichtsring' },
@@ -159,6 +163,7 @@ const types = [
 const bitShapes = BIT_SHAPES
 const holeShapes = HOLE_SHAPES
 const lockedParts = computed(() => props.kit.parts.filter(p => p.role === 'locked'))
+const holeRange = computed(() => [Math.min(props.kit.zones.metal.rKeep, props.kit.zones.base.plate.rKeep) + 0.5, props.kit.limits.metalDiameter[1] / 2])
 const bitLabel = computed(() => bitShapes.find(item => item.id === props.bey.bit.shape)?.label ?? props.bey.bit.shape)
 
 const percent = v => `${Math.round(v * 100)} %`
@@ -166,8 +171,9 @@ const signed = v => (v > 0 ? '+' : '') + v.toFixed(2)
 
 function applyType(type) {
   props.bey.type = type
-  Object.assign(props.bey.metal, PRESETS[type].metal)
-  Object.assign(props.bey.base, PRESETS[type].base)
+  const preset = presetFor(type, props.kit)
+  Object.assign(props.bey.metal, preset.metal)
+  Object.assign(props.bey.base, preset.base)
 }
 
 function holeState(hole) {

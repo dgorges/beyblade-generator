@@ -1,7 +1,7 @@
 import Module from 'manifold-3d'
 import wasmUrl from 'manifold-3d/manifold.wasm?url'
 import { createEngine } from '../geometry/engine.js'
-import { kits } from '../kits/ironForest.js'
+import { kits } from '../kits/index.js'
 
 let engine = null
 let ready = null

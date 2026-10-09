@@ -24,14 +24,12 @@
           </div>
         </div>
 
+        <div v-if="notice" class="kit-notice" role="status">{{ notice }} <button type="button" @click="notice = ''">✕</button></div>
         <div v-if="error" class="viewer-error">
           <strong>Kit-Dateien nicht gefunden</strong>
-          <span>Diese Version baut auf einem gekauften Kit auf. Aus Lizenzgründen liegen die Kit-Dateien nicht online, sondern nur lokal.</span>
-          <span>Lokal einrichten: STL-Dateien nach <code>reference/</code> kopieren und ausführen:</span>
-          <code>npm run kit:extract</code>
-          <small>{{ error }}</small>
+          <span>{{ error }}</span>
         </div>
-        <BeybladeViewer v-else :kit="kit" :heights="heights" :locked="locked" :design="design" :type="bey.type" :dark="dark" :exploded="exploded" :busy="busy" :visibility="visibility" :selected="selected" @visibility="visibility = $event" @select="selectPart" />
+        <BeybladeViewer v-else :key="kit.id" :kit="kit" :heights="heights" :locked="locked" :design="design" :type="bey.type" :dark="dark" :exploded="exploded" :busy="busy" :visibility="visibility" :selected="selected" @visibility="visibility = $event" @select="selectPart" />
 
         <div class="stats">
           <div><span>⚖️ Gewicht</span><strong>{{ stats.weight.toFixed(1) }} g</strong></div>
@@ -53,7 +51,7 @@
           </button>
         </nav>
 
-        <ParameterPanel v-model:blade-tab="bladeTab" :bey="bey" :step="step" :kit="kit" :stats="stats" :warnings="warnings" :selected="selected" />
+        <ParameterPanel v-model:blade-tab="bladeTab" :bey="bey" :kits="kitList" @kit="switchKit" :step="step" :kit="kit" :stats="stats" :warnings="warnings" :selected="selected" />
 
         <div class="wizard-actions">
           <button class="secondary" type="button" :disabled="step === 1" @click="step--">← Zurück</button>
@@ -66,7 +64,7 @@
           <label class="secondary file-button">📂 Projekt laden<input type="file" accept=".json,application/json" @change="importProject"></label>
         </div>
 
-        <p class="prototype-note"><strong>Hinweis:</strong> Die 🔒 Schnittstellenteile (Lock-Chip, Oberring, Ratchet-Kern, Bit-Anschluss) stammen unverändert aus deinem gekauften Kit und sind nur für den privaten Gebrauch. Die Werte zu Angriff, Verteidigung und Ausdauer sind nur grobe Schätzungen aus der Geometrie. Inoffizielles, nicht-kommerzielles Fanprojekt, nicht verbunden mit Takara Tomy oder Hasbro. „Beyblade“ ist eine Marke der jeweiligen Inhaber. Gedruckte Kreisel drehen sehr schnell und können brechen: nur unter Aufsicht spielen.</p>
+        <p class="prototype-note"><strong>Hinweis:</strong> Grundlage ist das Modell „{{ kit.name }}“. Die 🔒 Schnittstellenteile werden unverändert übernommen. Die Werte zu Angriff, Verteidigung und Ausdauer sind nur grobe Schätzungen aus der Geometrie. Gedruckte Kreisel drehen sehr schnell und können brechen: nur unter Aufsicht spielen.</p>
       </aside>
     </main>
   </div>
@@ -76,22 +74,24 @@
 import { computed, onMounted, ref, shallowRef, watch } from 'vue'
 import BeybladeViewer from './components/BeybladeViewer.vue'
 import ParameterPanel from './components/ParameterPanel.vue'
-import { createDefaultBey, normalizeProject, PRESETS, BIT_SHAPES } from './models/BeyParameters.js'
+import { createDefaultBey, normalizeProject, presetFor, PRESETS, BIT_SHAPES } from './models/BeyParameters.js'
 import { downloadJson, readJsonFile, saveLocal, loadLocal } from './utils/projectFile.js'
 import { exportZip } from './utils/stl.js'
 import { loadKit, buildBey } from './geometry/client.js'
 import { DENSITY } from './geometry/engine.js'
-import { kits } from './kits/ironForest.js'
+import { kits, DEFAULT_KIT } from './kits/index.js'
 
 const bey = ref(normalizeProject(loadLocal() ?? createDefaultBey()))
-const kit = computed(() => kits[bey.value.kit] ?? kits['iron-forest'])
+const kit = computed(() => kits[bey.value.kit] ?? kits[DEFAULT_KIT])
+const kitList = Object.values(kits).filter(k => k.bundled || import.meta.env.DEV)
+const notice = ref('')
 const dark = ref(window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false)
 const step = ref(bey.value.activeStep || 1)
 const exploded = ref(false)
 const visibility = ref({})
 const selected = ref('')
 const bladeTab = ref('metal')
-const stepLabels = ['BLADE', 'RATCHET', 'BIT', 'FERTIG']
+const stepLabels = ['BLADE', 'KIT', 'BIT', 'FERTIG']
 
 const locked = shallowRef(null)
 const heights = shallowRef(null)
@@ -105,7 +105,7 @@ const stats = computed(() => {
   const density = DENSITY[bey.value.print.material] ?? DENSITY.PLA
   const total = Object.values(volumes.value).reduce((a, b) => a + b, 0)
   let radius = 0
-  for (const id of ['p1-0', 'p2-3']) {
+  for (const id of kit.value.parts.filter(p => p.role === 'metal' || p.role === 'base').map(p => p.id)) {
     const p = design.value?.[id]?.positions
     if (!p) continue
     for (let i = 0; i < p.length; i += 3) radius = Math.max(radius, Math.hypot(p[i], p[i + 1]))
@@ -133,8 +133,8 @@ const rating = computed(() => {
   const sharp = { needle: 0, point: 1, ball: 2, rush: 4, flat: 5 }[b.shape] ?? 2
   return {
     attack: clamp(2 + m.wingLength * 0.8 + Math.max(0, m.sweep) * 2 + m.wallHeight * 0.4 + sharp * 0.6),
-    defense: clamp(3 + (m.diameter - 41) * 0.35 + m.wingWidth * 3 - m.wingLength * 0.3),
-    stamina: clamp(9 - sharp * 1.2 - m.wingLength * 0.5 + (m.diameter - 41) * 0.2 - bey.value.holes.length * 0.3)
+    defense: clamp(3 + (m.diameter - kit.value.limits.metalDiameter[0]) * 0.35 + m.wingWidth * 3 - m.wingLength * 0.3),
+    stamina: clamp(9 - sharp * 1.2 - m.wingLength * 0.5 + (m.diameter - kit.value.limits.metalDiameter[0]) * 0.2 - bey.value.holes.length * 0.3)
   }
 })
 
@@ -168,23 +168,35 @@ watch(bey, value => {
 watch(step, value => { bey.value.activeStep = value })
 watch(dark, value => { document.documentElement.dataset.theme = value ? 'dark' : 'light' }, { immediate: true })
 
+const roleId = role => kit.value.parts.find(p => p.role === role)?.id ?? ''
+
 function selectPart(part) {
-  selected.value = part.id
-  if (part.id === 'p1-0') { step.value = 1; bladeTab.value = 'metal' }
-  else if (part.id === 'p2-3') { step.value = 1; bladeTab.value = 'base' }
-  else if (part.group === 'bit') step.value = 3
+  if (part.role === 'metal') { step.value = 1; bladeTab.value = 'metal' }
+  else if (part.role === 'base') { step.value = 1; bladeTab.value = 'base' }
+  else if (part.role === 'bit') step.value = 3
   else step.value = 2
+  selected.value = part.id
 }
 
 function resetBey() {
   if (!confirm('Neues, schlichtes Beyblade beginnen? Das aktuelle Design wird ersetzt.')) return
-  bey.value = createDefaultBey()
+  bey.value = createDefaultBey(kit.value.id)
   step.value = 1
   bladeTab.value = 'metal'
 }
 
+function switchKit(id) {
+  if (id === bey.value.kit) return
+  if (!confirm(`Zum Kit „${kits[id].name}“ wechseln? Ring, Basis und Bit werden auf die Startwerte dieses Kits zurückgesetzt.`)) return
+  bey.value = { ...createDefaultBey(id), name: bey.value.name, rotation: bey.value.rotation, activeStep: 2 }
+}
+
 watch([step, bladeTab], ([s, tab]) => {
-  selected.value = s === 1 ? (tab === 'base' ? 'p2-3' : tab === 'metal' ? 'p1-0' : '') : s === 3 ? 'p2-2' : s === 2 ? (kit.value.parts.find(p => p.id === selected.value)?.role === 'locked' ? selected.value : 'p2-0') : ''
+  const current = kit.value.parts.find(p => p.id === selected.value)
+  if (s === 1) selected.value = tab === 'base' ? roleId('base') : tab === 'metal' ? roleId('metal') : ''
+  else if (s === 2) selected.value = current?.role === 'locked' ? current.id : ''
+  else if (s === 3) selected.value = roleId('bit')
+  else selected.value = ''
 })
 
 function pick(list) { return list[Math.floor(Math.random() * list.length)] }
@@ -194,8 +206,10 @@ function randomize() {
   const type = pick(Object.keys(PRESETS))
   bey.value.name = pick(['Dragon Fury', 'Shadow Nova', 'Storm Fang', 'Iron Phoenix', 'Cosmic Bite', 'Thunder Claw', 'Forest Titan'])
   bey.value.type = type
-  bey.value.metal = { ...PRESETS[type].metal, wings: Math.round(rnd(2, 9, 0)), wingLength: rnd(0.5, 5.5), wingWidth: rnd(0.2, 0.8, 2), sweep: rnd(-0.6, 0.9, 2), wallHeight: rnd(0, 3.5) }
-  bey.value.base = { ...PRESETS[type].base, spikes: Math.round(rnd(4, 12, 0)), spikeHeight: rnd(1, 6), spikeLength: rnd(0, 3) }
+  const preset = presetFor(type, kit.value)
+  const [wallMin, wallMax] = kit.value.limits.wallHeight
+  bey.value.metal = { ...preset.metal, wings: Math.round(rnd(2, 9, 0)), wingLength: rnd(0.5, 5.5), wingWidth: rnd(0.2, 0.8, 2), sweep: rnd(-0.6, 0.9, 2), wallHeight: rnd(wallMin, wallMax) }
+  bey.value.base = { ...preset.base, spikes: Math.round(rnd(4, 12, 0)), spikeHeight: rnd(1, 6), spikeLength: rnd(0, 3) }
   bey.value.bit.shape = pick(BIT_SHAPES).id
   step.value = 1
 }
@@ -215,14 +229,29 @@ function exportAll() {
   exportZip({ bey: bey.value, kit: kit.value, locked: locked.value, design: design.value, heights: heights.value })
 }
 
-onMounted(async () => {
+async function activateKit(id) {
+  error.value = ''
+  locked.value = null
+  heights.value = null
+  design.value = null
+  volumes.value = {}
+  visibility.value = {}
   try {
-    const result = await loadKit(kit.value.id)
+    const result = await loadKit(id)
+    if (id !== kit.value.id) return
     heights.value = result.heights
     locked.value = result.parts
     await runBuild()
   } catch (e) {
-    error.value = e.message
+    if (id !== DEFAULT_KIT) {
+      notice.value = `Das Kit „${kits[id].name}“ ist hier nicht verfügbar. Es wurde zu „${kits[DEFAULT_KIT].name}“ gewechselt.`
+      bey.value = { ...createDefaultBey(DEFAULT_KIT), name: bey.value.name, rotation: bey.value.rotation }
+    } else {
+      error.value = e.message
+    }
   }
-})
+}
+
+watch(() => bey.value.kit, id => activateKit(id))
+onMounted(() => activateKit(kit.value.id))
 </script>

@@ -1,7 +1,8 @@
 # Roadmap
 
 ## v3, aktuell (0.3.x): Kit-basiert
-- Die 🔒 Schnittstellenteile kommen 1:1 aus dem gekauften Kit „Iron Forest 4-80 High Needle“ von VinCoda (`public/kits/iron-forest/`).
+- Grundlage ist standardmäßig **Wizard Rod**. **Iron Forest** ist lokal als zweite Grundlage verfügbar (Umschalten in Schritt 2).
+- Die 🔒 Schnittstellenteile kommen 1:1 aus dem jeweiligen Kit (`public/kits/<kit>/`).
 - 🎨 Generiert werden Gewichtsring, Basis mit Zinken, Bit-Spitze und Löcher.
 - Teile lassen sich ein- und ausblenden, ein Klick auf ein Teil öffnet den passenden Schritt, und der Start ist minimal.
 - Der Export ist eine ZIP-Datei mit allen Teilen als STL in Druckausrichtung.
@@ -14,7 +15,6 @@ Ein abstraktes Template, das nur die Schnittstellen enthält. Diese werden param
 - **Zentrale Maßdatei:** z. B. `src/kits/bxCore.spec.js`. Alle Schnittstellenmaße und Toleranzen stehen an einer Stelle, damit sie sich nach Testdrucken nachjustieren lassen.
 - **Ratchet:** frei wählbar (3-60, 4-60, 4-80, 5-70 …), generiert aus Anzahl der Vorsprünge × Höhe.
 - **Kit-Auswahl:** In der UI lässt sich zwischen „BX-Kern (generisch)“ und „Iron Forest (Kit)“ umschalten.
-- **Lizenz:** Ohne kopierte Kit-Meshes ließe sich der Generator auch teilen.
 
 ### Offen vor dem Start
 - Ohne Messschieber stammen die Maße aus Kit-Werten, dazu kommen Testdrucke und Foto-Abgleich mit Lineal.

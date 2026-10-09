@@ -3,7 +3,7 @@ import { readStl, weld } from './stl-io.mjs'
 const wasm = await Module(); wasm.setup()
 const { Manifold, Mesh } = wasm
 const id = process.argv[2]; const step = +(process.argv[3] || 0.5)
-const { verts, tris } = weld(readStl(`public/kits/iron-forest/${id}.stl`))
+const { verts, tris } = weld(readStl(`${process.env.KIT || 'public/kits/iron-forest'}/${id}.stl`))
 const m = new Manifold(new Mesh({ numProp: 3, vertProperties: verts, triVerts: tris }))
 const bb = m.boundingBox()
 console.log(id, 'z', bb.min[2].toFixed(2), '..', bb.max[2].toFixed(2))

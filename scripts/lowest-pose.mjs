@@ -2,7 +2,7 @@ import Module from 'manifold-3d'
 import { readStl, weld } from './stl-io.mjs'
 const wasm = await Module(); wasm.setup()
 const { Manifold, Mesh } = wasm
-const load = id => { const { verts, tris } = weld(readStl(`public/kits/iron-forest/${id}.stl`)); return new Manifold(new Mesh({ numProp: 3, vertProperties: verts, triVerts: tris })) }
+const load = id => { const { verts, tris } = weld(readStl(`${process.env.KIT || 'public/kits/iron-forest'}/${id}.stl`)); return new Manifold(new Mesh({ numProp: 3, vertProperties: verts, triVerts: tris })) }
 const orient = (m, flip, rot, h) => { let r = flip ? m.rotate([180, 0, 0]) : m; r = r.rotate([0, 0, rot]); return flip ? r.translate([0, 0, h]) : r }
 const fixed = JSON.parse(process.argv[2])
 const target = JSON.parse(process.argv[3])

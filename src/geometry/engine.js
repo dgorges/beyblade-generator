@@ -64,6 +64,10 @@ export function createEngine(wasm) {
     return keep(keep(cs(polys).extrude(z1 - z0 + 2)).translate([0, 0, z0 - 1]))
   }
 
+  function roleId(role) {
+    return kit.parts.find(p => p.role === role)?.id
+  }
+
   function direction(bey) {
     return bey.rotation === 'left' ? -1 : 1
   }
@@ -71,24 +75,27 @@ export function createEngine(wasm) {
   function buildMetal(bey) {
     const z = kit.zones.metal
     const p = bey.metal
-    const ref = refs.get('p1-0')
+    const ref = refs.get(roleId('metal'))
     const keepZone = keep(ref.intersect(keep(cyl(z.rKeep, -1, 20).add(slab(-1, z.pegs.zMax)))))
     const outline = cs([polarOutline({ radius: p.diameter / 2, wings: p.wings, wingLength: p.wingLength, wingWidth: p.wingWidth, sweep: p.sweep, direction: direction(bey) })])
-    const ring = keep(outline.subtract(circle(z.rKeep - 0.6)))
+    const ring = keep(outline.subtract(circle(z.ringInner ?? z.rKeep - 0.6)))
     const lowTop = Math.min(z.underUpperRing.zMax, z.ringZ + p.height)
-    const bevel = Math.min(p.bevel, (lowTop - z.ringZ) * 0.45)
-    const body = keep(keep(ring.extrude(lowTop - z.ringZ - bevel)).translate([0, 0, z.ringZ]))
+    const bodyZ0 = Math.max(z.ringZ, z.underUpperRing.zMin ?? z.ringZ)
+    const bevel = Math.min(p.bevel, (lowTop - bodyZ0) * 0.45)
+    const body = keep(keep(ring.extrude(lowTop - bodyZ0 - bevel)).translate([0, 0, bodyZ0]))
     const cap = keep(keep(keep(ring.offset(-bevel, 'Round')).extrude(bevel)).translate([0, 0, lowTop - bevel]))
     let design = keep(body.add(cap))
-    const wallTop = z.ringZ + p.height + p.wallHeight
-    if (wallTop > lowTop + 0.2) {
+    const wallDir = z.wallDir ?? 1
+    const wallBottom = z.ringZ - (wallDir < 0 ? p.wallHeight : 0)
+    const wallTop = z.ringZ + p.height + (wallDir > 0 ? p.wallHeight : 0)
+    if (wallTop > lowTop + 0.2 || wallBottom < z.ringZ - 0.2 || bodyZ0 > z.ringZ) {
       const outer = keep(outline.subtract(circle(z.underUpperRing.rMax + 0.2)))
       if (!outer.isEmpty()) {
-        const walls = keep(keep(outer.extrude(wallTop - z.ringZ, 8, p.twist * direction(bey))).translate([0, 0, z.ringZ]))
+        const walls = keep(keep(outer.extrude(wallTop - wallBottom, 8, p.twist * direction(bey))).translate([0, 0, wallBottom]))
         design = keep(design.add(walls))
       }
     }
-    const cut = holeCut(bey.holes, 'metal', z.rKeep + 0.8, p.diameter / 2 - 0.8, z.ringZ, wallTop)
+    const cut = holeCut(bey.holes, 'metal', z.rKeep + 0.8, p.diameter / 2 - 0.8, wallBottom, wallTop)
     if (cut) design = keep(design.subtract(cut))
     return keep(design.add(keepZone))
   }
@@ -96,7 +103,7 @@ export function createEngine(wasm) {
   function buildBase(bey) {
     const z = kit.zones.base
     const p = bey.base
-    const ref = refs.get('p2-3')
+    const ref = refs.get(roleId('base'))
     const zone = keep(keep(cyl(z.hub.rKeep, -1, z.hub.zMax)
       .add(cyl(z.plate.rKeep, z.hub.zMax, z.plate.zMax)))
       .add(cyl(z.core.rKeep, z.plate.zMax, z.height + 1)))
@@ -116,13 +123,21 @@ export function createEngine(wasm) {
       const mask = cs(sectors)
       const spikes = keep(keep(outline.intersect(mask)).subtract(circle(radius - p.spikeDepth)))
       if (!spikes.isEmpty()) {
-        const lower = keep(keep(spikes.extrude(p.spikeHeight * 0.7 + 0.1)).translate([0, 0, z.plate.zMax - 0.1]))
+        const up = (z.spikeDir ?? 1) > 0
+        const h1 = p.spikeHeight * 0.7 + 0.1
+        const h2 = p.spikeHeight * 0.3
+        const lowerZ = up ? z.plate.zMax - 0.1 : z.plate.zMin + 0.1 - h1
+        const lower = keep(keep(spikes.extrude(h1)).translate([0, 0, lowerZ]))
         const tipShape = keep(spikes.offset(-0.35, 'Round'))
         design = keep(design.add(lower))
-        if (!tipShape.isEmpty()) design = keep(design.add(keep(keep(tipShape.extrude(p.spikeHeight * 0.3)).translate([0, 0, z.plate.zMax + p.spikeHeight * 0.7]))))
+        if (!tipShape.isEmpty()) {
+          const tipZ = up ? z.plate.zMax + p.spikeHeight * 0.7 : z.plate.zMin - p.spikeHeight
+          design = keep(design.add(keep(keep(tipShape.extrude(h2)).translate([0, 0, tipZ]))))
+        }
       }
     }
-    const cut = holeCut(bey.holes, 'base', z.plate.rKeep + 0.8, radius - 0.8, z.plate.zMin, z.plate.zMax + p.spikeHeight)
+    const spikeUp = (z.spikeDir ?? 1) > 0
+    const cut = holeCut(bey.holes, 'base', z.plate.rKeep + 0.8, radius - 0.8, spikeUp ? z.plate.zMin : z.plate.zMin - p.spikeHeight, spikeUp ? z.plate.zMax + p.spikeHeight : z.plate.zMax)
     if (cut) design = keep(design.subtract(cut))
     return keep(design.add(keepZone))
   }
@@ -130,20 +145,26 @@ export function createEngine(wasm) {
   function buildBit(bey) {
     const z = kit.zones.bit
     const b = bey.bit
-    const ref = refs.get('p2-2')
-    const keepZone = keep(ref.intersect(slab(-1, z.keepZMax)))
-    const profile = bitTipProfile({ ...b, bodyRadius: Math.min(b.bodyRadius, z.flangeR - 0.3) }, z.keepZMax)
+    const ref = refs.get(roleId('bit'))
+    const above = z.keepSide === 'above'
+    const keepZone = keep(ref.intersect(above ? slab(z.plane, z.height + 1) : slab(-1, z.plane)))
+    const bodyRadius = Math.min(b.bodyRadius, z.maxRadius)
+    const profile = bitTipProfile({ ...b, bodyRadius }, 0)
     let tip = keep(Manifold.revolve(cs([profile]), 96))
     if (b.ribs > 0) {
       const ribs = []
       for (let i = 0; i < b.ribs; i++) {
         const box = keep(Manifold.cube([0.9, 0.7, Math.max(0.5, b.bodyLength - 0.4)], false))
-        const moved = keep(box.translate([-0.45, b.bodyRadius - 0.35, z.keepZMax]))
+        const moved = keep(box.translate([-0.45, bodyRadius - 0.35, 0]))
         ribs.push(keep(moved.rotate([0, 0, (i * 360) / b.ribs])))
       }
       tip = keep(tip.add(keep(Manifold.union(ribs))))
     }
-    return keep(keepZone.add(tip))
+    if (b.diskRadius > bodyRadius && b.diskThickness > 0.2) {
+      tip = keep(tip.add(keep(Manifold.cylinder(b.diskThickness, Math.min(b.diskRadius, z.maxDisk ?? 15), Math.min(b.diskRadius, z.maxDisk ?? 15) - 0.4, 128))))
+    }
+    const oriented = above ? keep(keep(tip.mirror([0, 0, 1])).translate([0, 0, z.plane])) : keep(tip.translate([0, 0, z.plane]))
+    return keep(keepZone.add(oriented))
   }
 
   function refHeight(id) {
@@ -184,9 +205,9 @@ export function createEngine(wasm) {
   function build(bey, { checkFit = true } = {}) {
     try {
       const design = {
-        'p1-0': buildMetal(bey),
-        'p2-3': buildBase(bey),
-        'p2-2': buildBit(bey)
+        [roleId('metal')]: buildMetal(bey),
+        [roleId('base')]: buildBase(bey),
+        [roleId('bit')]: buildBit(bey)
       }
       const parts = {}
       const warnings = []
@@ -197,11 +218,19 @@ export function createEngine(wasm) {
       if (checkFit) {
         const lockedParts = kit.parts.filter(p => p.role === 'locked')
         const locked = keep(Manifold.union(lockedParts.filter(p => !p.hidden).map(p => placed(p, refs.get(p.id)))))
-        for (const [id, m] of Object.entries(design)) {
-          const part = kit.parts.find(p => p.id === id)
-          const overlap = keep(placed(part, m).intersect(locked)).volume()
-          const refOverlap = keep(placed(part, refs.get(id)).intersect(locked)).volume()
-          if (overlap > refOverlap + 2) warnings.push({ part: id, level: 'warn', text: `Kollidiert mit Schnittstellenteilen (${(overlap - refOverlap).toFixed(1)} mm³)` })
+        const ids = Object.keys(design)
+        const partOf = id => kit.parts.find(p => p.id === id)
+        const placedDesign = Object.fromEntries(ids.map(id => [id, placed(partOf(id), design[id])]))
+        const placedRef = Object.fromEntries(ids.map(id => [id, placed(partOf(id), refs.get(id))]))
+        for (const id of ids) {
+          const overlap = keep(placedDesign[id].intersect(locked)).volume()
+          const refOverlap = keep(placedRef[id].intersect(locked)).volume()
+          if (overlap > refOverlap + 2) warnings.push({ part: id, level: 'warn', text: `${partOf(id).label} kollidiert mit Schnittstellenteilen (${(overlap - refOverlap).toFixed(1)} mm³)` })
+        }
+        for (let i = 0; i < ids.length; i++) for (let j = i + 1; j < ids.length; j++) {
+          const overlap = keep(placedDesign[ids[i]].intersect(placedDesign[ids[j]])).volume()
+          const refOverlap = keep(placedRef[ids[i]].intersect(placedRef[ids[j]])).volume()
+          if (overlap > refOverlap + 2) warnings.push({ part: ids[i], level: 'warn', text: `${partOf(ids[i]).label} kollidiert mit ${partOf(ids[j]).label} (${(overlap - refOverlap).toFixed(1)} mm³)` })
         }
       }
       const volumes = Object.fromEntries(kit.parts.map(p => [p.id, parts[p.id]?.volume ?? refs.get(p.id).volume()]))
