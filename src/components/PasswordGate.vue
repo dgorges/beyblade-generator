@@ -1,5 +1,6 @@
 <template>
   <div class="gate">
+    <button class="theme-button gate-theme" type="button" @click="toggle" :aria-label="dark ? 'Lightmode' : 'Darkmode'">{{ dark ? '☀️' : '🌙' }}</button>
     <form class="gate-card" @submit.prevent="submit">
       <div class="brand-mark">BX</div>
       <h1>Beyblade Creator</h1>
@@ -13,9 +14,11 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useTheme } from '../composables/useTheme.js'
 
 const props = defineProps({ salt: { type: String, required: true }, hash: { type: String, required: true } })
 const emit = defineEmits(['unlock'])
+const { dark, toggle } = useTheme()
 const password = ref('')
 const error = ref('')
 const busy = ref(false)

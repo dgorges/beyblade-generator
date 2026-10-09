@@ -88,12 +88,13 @@ import { exportZip } from './utils/stl.js'
 import { loadKit, buildBey } from './geometry/client.js'
 import { DENSITY } from './geometry/engine.js'
 import { kits, DEFAULT_KIT } from './kits/index.js'
+import { useTheme } from './composables/useTheme.js'
 
 const bey = ref(normalizeProject(loadLocal() ?? createDefaultBey()))
 const kit = computed(() => kits[bey.value.kit] ?? kits[DEFAULT_KIT])
 const kitList = Object.values(kits).filter(k => k.bundled || import.meta.env.DEV)
 const notice = ref('')
-const dark = ref(window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false)
+const { dark } = useTheme()
 const stepLabels = ['BLADE', 'BIT', 'FERTIG']
 const step = ref(Math.min(bey.value.activeStep || 1, stepLabels.length))
 const lockedHint = ref('')
@@ -175,7 +176,6 @@ watch(bey, value => {
   scheduleBuild()
 }, { deep: true })
 watch(step, value => { bey.value.activeStep = value })
-watch(dark, value => { document.documentElement.dataset.theme = value ? 'dark' : 'light' }, { immediate: true })
 
 const focusPart = computed(() => {
   const isVisible = part => visibility.value[part.id] ?? !part.hidden
