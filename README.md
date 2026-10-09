@@ -17,6 +17,9 @@ npm run kit:extract
 
 Iron Forest erscheint nur in der lokalen Entwicklungsumgebung (Auswahl im Schritt „Fertig“). Fehlt es, wechselt die App automatisch zu Wizard Rod.
 
+## Passwortschutz (GitHub Pages)
+Ist in GitHub unter Settings → Secrets and variables → Actions das Repository-Secret `APP_PASSWORD` gesetzt, baut die Action eine Passwortabfrage ein. Das Passwort selbst landet nicht im Build, nur ein PBKDF2-Hash. Der Browser merkt sich die Freigabe, bis sich das Passwort ändert. Lokal (`npm run dev`) gibt es keine Abfrage.
+
 ## Entwicklung
 ```bash
 npm install

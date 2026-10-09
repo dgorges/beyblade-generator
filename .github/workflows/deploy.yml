@@ -25,6 +25,9 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      - run: node scripts/password-hash.mjs
+        env:
+          APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
       - run: npx vite build --base=/${{ github.event.repository.name }}/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
