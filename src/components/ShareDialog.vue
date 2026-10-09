@@ -1,35 +1,36 @@
 <template>
-  <div class="share-backdrop" @click.self="$emit('close')">
-    <section class="share-dialog" role="dialog" aria-modal="true" aria-labelledby="share-title">
-      <header class="share-head">
-        <h2 id="share-title"><AppIcon name="share" /> Beyblade teilen</h2>
-        <button type="button" class="icon-button" aria-label="Schließen" @click="$emit('close')"><AppIcon name="close-x" /></button>
+  <dialog ref="dialog" class="b_share-dialog bJS_share-dialog" aria-labelledby="share-title" aria-describedby="share-hint" @close="$emit('close')" @click="onBackdrop">
+    <div class="b_share-dialog__inner">
+      <header class="b_share-dialog__head">
+        <h2 id="share-title" class="b_share-dialog__title"><AppIcon name="share" /> Beyblade teilen</h2>
+        <button type="button" class="b_button b_button--plain" aria-label="Dialog schließen" @click="close"><AppIcon name="close-x" /></button>
       </header>
 
-      <div class="share-preview">
-        <img v-if="imageUrl" :src="imageUrl" :alt="`Vorschau von ${bey.name}`" />
+      <figure class="b_share-dialog__preview" aria-live="polite">
+        <img v-if="imageUrl" class="b_share-dialog__image" :src="imageUrl" :alt="`Vorschaubild von ${bey.name}`" />
         <span v-else>Bild wird erstellt …</span>
-      </div>
+      </figure>
 
-      <div class="share-actions">
-        <button v-if="canShareFiles" type="button" class="primary share-native" :disabled="!image" @click="nativeShare"><AppIcon name="share" /> Teilen …</button>
-        <a class="secondary" :href="whatsapp" target="_blank" rel="noopener"><AppIcon name="message-round" /> WhatsApp</a>
-        <a class="secondary" :href="mail"><AppIcon name="mail" /> E-Mail</a>
-        <button type="button" class="secondary" @click="copyLink"><AppIcon :name="copied ? 'done-v' : 'share'" /> {{ copied ? 'Kopiert' : 'Link kopieren' }}</button>
-        <button type="button" class="secondary" :disabled="!image" @click="downloadBlob(image, fileName(bey, 'png'))"><AppIcon name="picture" /> Bild speichern</button>
-        <button type="button" class="secondary" @click="downloadBlob(jsonBlob, fileName(bey, 'json'))"><AppIcon name="download" /> Projektdatei</button>
+      <div class="b_share-dialog__actions">
+        <button v-if="canShareFiles" type="button" class="b_button b_button--primary b_button--wide" :disabled="!image" @click="nativeShare"><AppIcon name="share" /> Teilen …</button>
+        <a class="b_button" :href="whatsapp" target="_blank" rel="noopener"><AppIcon name="message-round" /> WhatsApp<span class="b_visually-hidden"> (öffnet in neuem Fenster)</span></a>
+        <a class="b_button" :href="mail"><AppIcon name="mail" /> E-Mail</a>
+        <button type="button" class="b_button" @click="copyLink"><AppIcon :name="copied ? 'done-v' : 'share'" /> {{ copied ? 'Kopiert' : 'Link kopieren' }}</button>
+        <button type="button" class="b_button" :disabled="!image" @click="downloadBlob(image, fileName(bey, 'png'))"><AppIcon name="picture" /> Bild speichern</button>
+        <button type="button" class="b_button" @click="downloadBlob(jsonBlob, fileName(bey, 'json'))"><AppIcon name="download" /> Projektdatei</button>
       </div>
+      <p class="b_visually-hidden" aria-live="polite">{{ copied ? 'Link in die Zwischenablage kopiert' : '' }}</p>
 
-      <p class="share-hint">
+      <p id="share-hint" class="b_share-dialog__hint">
         <template v-if="canShareFiles">„Teilen …“ schickt Bild und Projektdatei zusammen, z. B. per WhatsApp. </template>
         WhatsApp und E-Mail senden einen Link, mit dem sich dein Beyblade direkt öffnen lässt. Das Bild kannst du mit „Bild speichern“ zusätzlich anhängen.
       </p>
-    </section>
-  </div>
+    </div>
+  </dialog>
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import AppIcon from './AppIcon.vue'
 import { shareUrl, shareText, whatsappUrl, mailUrl, fileName, downloadBlob } from '../utils/share.js'
 
@@ -38,6 +39,18 @@ const props = defineProps({
   image: { type: Blob, default: null }
 })
 defineEmits(['close'])
+
+const dialog = ref(null)
+
+onMounted(() => dialog.value?.showModal())
+
+function close() {
+  dialog.value?.close()
+}
+
+function onBackdrop(event) {
+  if (event.target === dialog.value) close()
+}
 
 const copied = ref(false)
 const url = computed(() => shareUrl(props.bey))

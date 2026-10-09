@@ -1,83 +1,99 @@
 <template>
-  <div class="app-shell">
-    <header class="topbar">
-      <div class="brand">
-        <div class="brand-mark">BX</div>
-        <div><h1>Beyblade Creator</h1><span>Kit: {{ kit.name }}</span></div>
+  <div class="b_app" :class="{ 'b_app--panel-closed': !panelOpen }">
+    <header class="b_topbar">
+      <div class="b_topbar__brand">
+        <div class="b_logo" aria-hidden="true">BX</div>
+        <div>
+          <h1 class="b_topbar__title">Beyblade Creator</h1>
+          <span class="b_topbar__subtitle">Kit: {{ kit.name }}</span>
+        </div>
       </div>
-      <div class="top-actions">
-        <button class="ghost-button" type="button" @click="resetBey"><AppIcon name="circle-add" /> Neu</button>
-        <button class="ghost-button" type="button" :disabled="!design" @click="openShare"><AppIcon name="share" /> Teilen</button>
-        <button class="ghost-button" type="button" @click="randomize"><AppIcon name="shuffle" /> Zufall</button>
-        <button class="theme-button" type="button" @click="dark = !dark" :aria-label="dark ? 'Lightmode' : 'Darkmode'" :title="dark ? 'Lightmode' : 'Darkmode'"><AppIcon name="palette-color" /></button>
+      <div class="b_topbar__actions">
+        <button class="b_button b_button--ghost b_topbar__action b_topbar__action--optional" type="button" @click="resetBey"><AppIcon name="circle-add" /> Neu</button>
+        <button class="b_button b_button--ghost" type="button" :disabled="!design" @click="openShare"><AppIcon name="share" /> Teilen</button>
+        <button class="b_button b_button--ghost b_topbar__action b_topbar__action--optional" type="button" @click="randomize"><AppIcon name="shuffle" /> Zufall</button>
+        <button class="b_button b_button--icon" type="button" @click="dark = !dark" :aria-label="dark ? 'Lightmode' : 'Darkmode'" :title="dark ? 'Lightmode' : 'Darkmode'"><AppIcon name="palette-color" /></button>
       </div>
     </header>
 
-    <main class="workspace">
-      <section class="preview-card">
-        <div class="preview-header">
+    <main class="b_app__workspace">
+      <section class="b_card b_preview" aria-labelledby="preview-title">
+        <div class="b_preview__header">
           <div>
-            <span class="eyebrow">3D PREVIEW · {{ stepLabels[step - 1] }}</span>
-            <h2>{{ bey.name }}</h2>
-          </div>
-          <div class="preview-tools">
-            <label class="toggle"><input v-model="exploded" type="checkbox"><span></span> Explosionsansicht</label>
+            <span class="b_eyebrow">3D PREVIEW · {{ stepLabels[step - 1] }}</span>
+            <h2 id="preview-title" class="b_card__title">{{ bey.name }}</h2>
           </div>
         </div>
 
-        <div v-if="notice" class="kit-notice" role="status">{{ notice }} <button type="button" @click="notice = ''" aria-label="Schließen"><AppIcon name="close-x" /></button></div>
-        <div v-if="error" class="viewer-error">
-          <strong>Kit-Dateien nicht gefunden</strong>
+        <div v-if="notice" class="b_notice" role="status">
+          {{ notice }}
+          <button class="b_button b_button--plain" type="button" aria-label="Hinweis schließen" @click="notice = ''"><AppIcon name="close-x" /></button>
+        </div>
+        <div v-if="error" class="b_viewer__error" role="alert">
+          <strong class="b_viewer__error-title">Kit-Dateien nicht gefunden</strong>
           <span>{{ error }}</span>
         </div>
-        <BeybladeViewer v-else ref="viewer" :key="kit.id" :kit="kit" :heights="heights" :locked="locked" :design="design" :type="bey.type" :dark="dark" :exploded="exploded" :busy="busy" :visibility="visibility" :selected="selected" @visibility="visibility = $event" @select="selectPart" />
+        <BeybladeViewer v-else ref="viewer" :key="kit.id" :kit="kit" :heights="heights" :locked="locked" :design="design" :type="bey.type" :dark="dark" v-model:exploded="exploded" :busy="busy" :visibility="visibility" :selected="selected" :panel-open="panelOpen" @visibility="visibility = $event" @select="selectPart" />
 
-        <div class="stats">
-          <div><span><AppIcon name="tag" /> Gewicht</span><strong>{{ stats.weight.toFixed(1) }} g</strong></div>
-          <div><span><AppIcon name="grid-aspect-ratio" /> Durchmesser</span><strong>{{ stats.diameter.toFixed(1) }} mm</strong></div>
-          <div><span><AppIcon name="sort" /> Höhe</span><strong>{{ stats.height.toFixed(1) }} mm</strong></div>
-          <div title="Angriff / Verteidigung / Ausdauer"><span><AppIcon name="star" /> Werte A / V / Au</span><strong>{{ rating.attack }} / {{ rating.defense }} / {{ rating.stamina }}</strong></div>
+        <div class="b_stats" :class="{ 'b_stats--open': statsOpen }">
+          <button type="button" class="b_stats__toggle" :aria-expanded="statsOpen" aria-controls="stats-values" @click="statsOpen = !statsOpen">
+            <span class="b_stats__toggle-label"><AppIcon name="star" /> Werte</span>
+            <span v-if="!statsOpen" class="b_stats__summary">{{ stats.weight.toFixed(1) }} g · {{ stats.diameter.toFixed(1) }} mm · {{ rating.attack }} / {{ rating.defense }} / {{ rating.stamina }}</span>
+            <AppIcon :name="statsOpen ? 'chevron-up' : 'chevron-down'" class="b_stats__chevron" />
+          </button>
+          <div id="stats-values" class="b_stats__grid">
+          <div class="b_stats__item"><span class="b_stats__label"><AppIcon name="tag" /> Gewicht</span><strong class="b_stats__value">{{ stats.weight.toFixed(1) }} g</strong></div>
+          <div class="b_stats__item"><span class="b_stats__label"><AppIcon name="grid-aspect-ratio" /> Durchmesser</span><strong class="b_stats__value">{{ stats.diameter.toFixed(1) }} mm</strong></div>
+          <div class="b_stats__item"><span class="b_stats__label"><AppIcon name="sort" /> Höhe</span><strong class="b_stats__value">{{ stats.height.toFixed(1) }} mm</strong></div>
+          <div class="b_stats__item" title="Angriff / Verteidigung / Ausdauer"><span class="b_stats__label"><AppIcon name="star" /> Werte A / V / Au</span><strong class="b_stats__value">{{ rating.attack }} / {{ rating.defense }} / {{ rating.stamina }}</strong></div>
+          </div>
         </div>
       </section>
 
-      <aside class="controls">
-        <div class="section-heading">
-          <span class="eyebrow">BUILD YOUR BEY</span>
-          <h2>Komponenten</h2>
+      <button v-if="!panelOpen" type="button" class="b_button b_button--primary b_app__panel-open" aria-controls="controls-panel" :aria-expanded="panelOpen" @click="panelOpen = true"><AppIcon name="edit" /> Bearbeiten</button>
+
+      <aside v-show="panelOpen" id="controls-panel" class="b_card b_controls" aria-labelledby="controls-title">
+        <div class="b_controls__heading">
+          <div>
+            <span class="b_eyebrow">BUILD YOUR BEY</span>
+            <h2 id="controls-title" class="b_card__title">Komponenten</h2>
+          </div>
+          <button type="button" class="b_button b_button--plain b_controls__close" aria-controls="controls-panel" :aria-expanded="panelOpen" aria-label="Bearbeitungspanel ausblenden" title="Panel ausblenden" @click="panelOpen = false"><AppIcon name="chevron-right" /></button>
         </div>
 
-        <div v-if="focus" class="focus-bar">
-          <span><AppIcon name="search" /> Fokus: <strong>{{ focusPart.label }}</strong></span>
-          <button type="button" class="secondary" @click="visibility = {}">Alle Teile zeigen</button>
+        <div v-if="focus" class="b_focus-bar">
+          <span class="b_focus-bar__label"><AppIcon name="search" /> Fokus: <strong>{{ focusPart.label }}</strong></span>
+          <button type="button" class="b_button b_button--small" @click="visibility = {}">Alle Teile zeigen</button>
         </div>
-        <nav v-else class="stepper" aria-label="Beyblade Komponenten">
-          <button v-for="(label, index) in stepLabels" :key="label" type="button" :class="{ active: step === index + 1, done: step > index + 1 }" @click="step = index + 1">
-            <span>{{ index + 1 }}</span><strong>{{ label }}</strong>
+        <nav v-else class="b_stepper" aria-label="Schritte">
+          <button v-for="(label, index) in stepLabels" :key="label" type="button" class="b_stepper__step" :class="{ 'b_stepper__step--active': step === index + 1, 'b_stepper__step--done': step > index + 1 }" :aria-current="step === index + 1 ? 'step' : undefined" @click="step = index + 1">
+            <span class="b_stepper__number">{{ index + 1 }}</span><strong class="b_stepper__label">{{ label }}</strong>
           </button>
         </nav>
 
         <ParameterPanel v-model:blade-tab="bladeTab" :bey="bey" :kits="kitList" :locked-hint="lockedHint" :focus="focus" @kit="switchKit" :step="step" :kit="kit" :stats="stats" :warnings="warnings" :selected="selected" />
 
-        <div v-if="!focus" class="wizard-actions">
-          <button class="secondary" type="button" :disabled="step === 1" @click="step--"><AppIcon name="chevron-left" /> Zurück</button>
-          <button v-if="step < stepLabels.length" class="primary" type="button" @click="step++">Weiter <AppIcon name="chevron-right" /></button>
-          <button v-else class="primary" type="button" :disabled="!design || busy" @click="exportAll"><AppIcon name="download" /> STL-Paket (ZIP)</button>
+        <div v-if="!focus" class="b_controls__actions">
+          <button class="b_button" type="button" :disabled="step === 1" @click="step--"><AppIcon name="chevron-left" /> Zurück</button>
+          <button v-if="step < stepLabels.length" class="b_button b_button--primary" type="button" @click="step++">Weiter <AppIcon name="chevron-right" /></button>
+          <button v-else class="b_button b_button--primary" type="button" :disabled="!design || busy" @click="exportAll"><AppIcon name="download" /> STL-Paket (ZIP)</button>
         </div>
 
-        <div class="project-actions">
-          <button class="secondary share-wide" type="button" :disabled="!design" @click="openShare"><AppIcon name="share" /> Teilen per WhatsApp oder E-Mail</button>
-          <button class="secondary" type="button" @click="downloadJson(bey)"><AppIcon name="download" /> Projekt speichern</button>
-          <label class="secondary file-button"><AppIcon name="folder-open" /> Projekt laden<input type="file" accept=".json,application/json" @change="importProject"></label>
+        <div class="b_controls__actions b_controls__actions--secondary">
+          <button class="b_button b_button--wide" type="button" :disabled="!design" @click="openShare"><AppIcon name="share" /> Teilen per WhatsApp oder E-Mail</button>
+          <button class="b_button" type="button" @click="downloadJson(bey)"><AppIcon name="download" /> Projekt speichern</button>
+          <label class="b_button b_button--file">
+            <AppIcon name="folder-open" /> Projekt laden
+            <input class="b_visually-hidden bJS_project-file" type="file" accept=".json,application/json" @change="importProject">
+          </label>
         </div>
-
-        <p class="prototype-note"><strong>Hinweis:</strong> Grundlage ist das Modell „{{ kit.name }}“. Die festen Schnittstellenteile werden unverändert übernommen. Die Werte zu Angriff, Verteidigung und Ausdauer sind nur grobe Schätzungen aus der Geometrie. Gedruckte Kreisel drehen sehr schnell und können brechen: nur unter Aufsicht spielen.</p>
       </aside>
     </main>
 
     <ShareDialog v-if="shareOpen" :bey="bey" :image="shareImage" @close="shareOpen = false" />
 
-    <footer class="site-footer">
-      Nicht-kommerzielles Spaßprojekt. Code und Inhalte wurden mit KI generiert.
+    <footer class="b_footer">
+      Nicht-kommerzielles Projekt für meine Jung! Danke an die KI.
     </footer>
   </div>
 </template>
@@ -112,6 +128,8 @@ async function openShare() {
 }
 
 const { dark } = useTheme()
+const statsOpen = ref(!window.matchMedia?.('(max-width: 1023px)').matches)
+const panelOpen = ref(true)
 const stepLabels = ['BLADE', 'BIT', 'FERTIG']
 const step = ref(Math.min(bey.value.activeStep || 1, stepLabels.length))
 const lockedHint = ref('')

@@ -1,0 +1,19 @@
+.b_footer {
+    max-width: var(--content-max-width);
+    margin: 0 auto;
+    padding: var(--space-3) var(--space-10) 28px;
+    color: var(--theme-text-muted);
+    font-size: var(--font-size-xs);
+    text-align: center;
+}
+
+@media (min-width: 1024px) {
+    .b_footer {
+        flex: none;
+        width: 100%;
+        max-width: none;
+        padding: var(--space-2) var(--space-5);
+        border-top: var(--thin-border-width) solid var(--theme-border);
+        background: var(--theme-surface-header);
+    }
+}

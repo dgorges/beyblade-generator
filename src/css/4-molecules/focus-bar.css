@@ -1,0 +1,18 @@
+.b_focus-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-4);
+    margin-bottom: var(--space-8);
+    padding: var(--space-4) var(--space-5);
+    border: var(--base-border-width) solid var(--theme-accent-border);
+    border-radius: var(--radius-m);
+    background: var(--theme-accent-soft);
+    font-size: var(--font-size-m);
+}
+
+.b_focus-bar__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}

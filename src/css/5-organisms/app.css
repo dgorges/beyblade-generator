@@ -1,0 +1,58 @@
+.b_app {
+    min-height: 100vh;
+    background: radial-gradient(circle at 20% 0%, var(--theme-glow), transparent 32%), var(--theme-page);
+}
+
+.b_app__workspace {
+    max-width: var(--content-max-width);
+    margin: 0 auto;
+    padding: var(--space-10);
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(360px, .65fr);
+    gap: var(--space-9);
+}
+
+.b_app__panel-open {
+    display: none;
+}
+
+@media (min-width: 1024px) {
+    .b_app {
+        height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .b_app__workspace {
+        --panel-space: calc(var(--panel-width) + var(--space-5) * 2);
+
+        position: relative;
+        flex: 1;
+        min-height: 0;
+        width: 100%;
+        max-width: none;
+        display: block;
+        padding: 0;
+    }
+
+    .b_app--panel-closed .b_app__workspace {
+        --panel-space: 0px;
+    }
+
+    .b_app__panel-open {
+        position: absolute;
+        top: var(--space-5);
+        right: var(--space-5);
+        z-index: 7;
+        display: inline-flex;
+    }
+}
+
+@media (max-width: 1023px) {
+    .b_app__workspace {
+        grid-template-columns: 1fr;
+        padding: var(--space-5);
+        gap: var(--space-5);
+    }
+}

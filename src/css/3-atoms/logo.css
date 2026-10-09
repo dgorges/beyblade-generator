@@ -1,0 +1,11 @@
+.b_logo {
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    border-radius: 13px;
+    background: linear-gradient(135deg, var(--color-violet-600), var(--color-blue-600));
+    box-shadow: 0 8px 20px color-mix(in srgb, var(--color-indigo-600) 25%, transparent);
+    color: var(--color-white);
+    font-weight: 900;
+}

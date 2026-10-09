@@ -1,0 +1,12 @@
+.b_card {
+    border: var(--base-border-width) solid var(--theme-border);
+    border-radius: var(--radius-xxl);
+    background: var(--theme-surface);
+    box-shadow: var(--shadow-card);
+}
+
+.b_card__title {
+    margin: var(--space-1) 0 0;
+    font-size: var(--font-size-heading);
+    letter-spacing: -.035em;
+}

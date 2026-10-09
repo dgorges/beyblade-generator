@@ -1,45 +1,46 @@
 <template>
-  <div class="viewer-wrap">
-    <div ref="container" class="viewer" @pointermove="onHover" @pointerleave="hovered = null" @pointerdown="onDown" @pointerup="onUp"></div>
-    <div class="viewer-toolbar" role="toolbar" aria-label="Ansicht">
-      <button type="button" @click="fit()" title="Modell einpassen"><AppIcon name="zoom-in" /> Einpassen</button>
-      <button type="button" @click="setView('iso')" title="3D-Ansicht">3D</button>
-      <button type="button" @click="setView('top')" title="Draufsicht">Oben</button>
-      <button type="button" @click="setView('side')" title="Seitenansicht">Seite</button>
-      <button type="button" @click="setView('bottom')" title="Untersicht">Unten</button>
-      <button type="button" :class="{ active: spin }" @click="spin = !spin" title="Automatisch drehen"><AppIcon name="refresh" /> Drehen</button>
-      <button type="button" :class="{ active: showLocks }" @click="showLocks = !showLocks" title="Gesperrte Schnittstellenteile hervorheben"><AppIcon name="lock" /> Schnittstellen</button>
-      <div class="parts-panel" :class="{ open: partsOpen }">
-        <button type="button" class="parts-toggle" @click="partsOpen = !partsOpen"><AppIcon name="show" /> Teile <AppIcon :name="partsOpen ? 'chevron-up' : 'chevron-down'" /></button>
-        <div v-if="partsOpen" class="parts-body">
-          <div class="parts-actions">
-            <button type="button" @click="$emit('visibility', {})">Alle</button>
-            <button type="button" @click="onlyDesign">Nur Design</button>
+  <div class="b_viewer">
+    <div ref="container" class="b_viewer__canvas bJS_viewer-canvas" role="img" :aria-label="`3D-Ansicht. ${hovered ? hovered.label : 'Klick auf ein Teil öffnet seine Einstellungen.'}`" @pointermove="onHover" @pointerleave="hovered = null" @pointerdown="onDown" @pointerup="onUp"></div>
+    <div class="b_viewer__toolbar" role="toolbar" aria-label="Ansicht">
+      <button type="button" class="b_viewer__tool" title="Modell einpassen" @click="fit()"><AppIcon name="zoom-in" /> Einpassen</button>
+      <button type="button" class="b_viewer__tool" title="3D-Ansicht" @click="setView('iso')">3D</button>
+      <button type="button" class="b_viewer__tool" title="Draufsicht" @click="setView('top')">Oben</button>
+      <button type="button" class="b_viewer__tool" title="Seitenansicht" @click="setView('side')">Seite</button>
+      <button type="button" class="b_viewer__tool" title="Untersicht" @click="setView('bottom')">Unten</button>
+      <button type="button" class="b_viewer__tool" :class="{ 'b_viewer__tool--active': exploded }" :aria-pressed="exploded" title="Teile auseinanderziehen" @click="emit('update:exploded', !exploded)"><AppIcon name="grid-even" /> Explosion</button>
+      <button type="button" class="b_viewer__tool" :class="{ 'b_viewer__tool--active': spin }" :aria-pressed="spin" title="Automatisch drehen" @click="spin = !spin"><AppIcon name="refresh" /> Drehen</button>
+      <button type="button" class="b_viewer__tool" :class="{ 'b_viewer__tool--active': showLocks }" :aria-pressed="showLocks" title="Gesperrte Schnittstellenteile hervorheben" @click="showLocks = !showLocks"><AppIcon name="lock" /> Schnittstellen</button>
+      <div class="b_parts">
+        <button type="button" class="b_viewer__tool" :aria-expanded="partsOpen" aria-controls="parts-list" @click="partsOpen = !partsOpen"><AppIcon name="show" /> Teile <AppIcon :name="partsOpen ? 'chevron-up' : 'chevron-down'" /></button>
+        <div v-if="partsOpen" id="parts-list" class="b_parts__body">
+          <div class="b_parts__actions">
+            <button type="button" class="b_button b_button--small" @click="$emit('visibility', {})">Alle</button>
+            <button type="button" class="b_button b_button--small" @click="onlyDesign">Nur Design</button>
           </div>
           <template v-for="group in kit.groups" :key="group.id">
-            <span class="parts-group">{{ group.label }}</span>
-            <div v-for="part in kit.parts.filter(p => p.group === group.id)" :key="part.id" class="parts-row" :class="{ selected: selected === part.id }">
-              <label>
+            <span class="b_parts__group">{{ group.label }}</span>
+            <div v-for="part in kit.parts.filter(p => p.group === group.id)" :key="part.id" class="b_parts__row" :class="{ 'b_parts__row--selected': selected === part.id }">
+              <label class="b_parts__label">
                 <input type="checkbox" :checked="isVisible(part)" @change="toggle(part, $event.target.checked)">
-                <span><AppIcon :name="part.role === 'locked' ? 'lock' : 'edit'" /> {{ part.label }}</span>
+                <span class="b_parts__name"><AppIcon :name="part.role === 'locked' ? 'lock' : 'edit'" /> {{ part.label }}</span>
               </label>
-              <button type="button" title="Nur dieses Teil zeigen" @click="solo(part)"><AppIcon name="search" /></button>
+              <button type="button" class="b_button b_button--small" :aria-label="`Nur ${part.label} zeigen`" title="Nur dieses Teil zeigen" @click="solo(part)"><AppIcon name="search" /></button>
             </div>
           </template>
         </div>
       </div>
     </div>
-    <div v-if="hovered" class="viewer-tooltip">
-      <strong>{{ hovered.label }} <small>– klicken zum Bearbeiten</small></strong>
-      <span><AppIcon :name="hovered.role === 'locked' ? 'lock' : 'edit'" /> {{ hovered.role === 'locked' ? 'Schnittstelle – unveränderbar' : 'Designteil – gestaltbar' }}</span>
+    <div v-if="hovered" class="b_viewer__tooltip" aria-hidden="true">
+      <strong>{{ hovered.label }} <small class="b_viewer__tooltip-hint">– klicken zum Bearbeiten</small></strong>
+      <span class="b_viewer__tooltip-role"><AppIcon :name="hovered.role === 'locked' ? 'lock' : 'edit'" /> {{ hovered.role === 'locked' ? 'Schnittstelle – unveränderbar' : 'Designteil – gestaltbar' }}</span>
     </div>
-    <div v-if="busy" class="viewer-busy">Berechne Geometrie …</div>
-    <p class="viewer-hint">Klick auf ein Teil: bearbeiten · Ziehen: drehen · Rechte Maustaste / Shift: verschieben · Mausrad: zoomen</p>
+    <div v-if="busy" class="b_viewer__busy" role="status">Berechne Geometrie …</div>
+    <p class="b_viewer__hint">Klick auf ein Teil: bearbeiten · Ziehen: drehen · Rechte Maustaste / Shift: verschieben · Mausrad: zoomen</p>
   </div>
 </template>
 
 <script setup>
-import { onMounted, onBeforeUnmount, watch, ref } from 'vue'
+import { nextTick, onMounted, onBeforeUnmount, watch, ref } from 'vue'
 import * as THREE from 'three'
 import AppIcon from './AppIcon.vue'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
@@ -55,10 +56,11 @@ const props = defineProps({
   exploded: { type: Boolean, default: false },
   busy: { type: Boolean, default: false },
   visibility: { type: Object, default: () => ({}) },
-  selected: { type: String, default: '' }
+  selected: { type: String, default: '' },
+  panelOpen: { type: Boolean, default: true }
 })
 
-const emit = defineEmits(['select', 'visibility'])
+const emit = defineEmits(['select', 'visibility', 'update:exploded'])
 const partsOpen = ref(false)
 
 const ACCENT = { attack: 0xef4444, defense: 0x22c55e, stamina: 0x8b5cf6, balance: 0xfacc15 }
@@ -68,6 +70,7 @@ const showLocks = ref(false)
 const hovered = ref(null)
 
 let scene, camera, renderer, controls, root, ground, animationId, resizeObserver
+let panelSpace = 0
 const meshes = new Map()
 const materials = {}
 let explodeT = 0
@@ -190,7 +193,8 @@ function fit(direction) {
   const sphere = box.getBoundingSphere(new THREE.Sphere())
   const dir = direction ?? camera.position.clone().sub(controls.target).normalize()
   const fov = THREE.MathUtils.degToRad(camera.fov / 2)
-  const fovH = Math.atan(Math.tan(fov) * camera.aspect)
+  const visibleAspect = (renderer.domElement.clientWidth - panelSpace) / Math.max(1, renderer.domElement.clientHeight)
+  const fovH = Math.atan(Math.tan(fov) * Math.max(0.2, visibleAspect))
   const distance = (sphere.radius * 0.92) / Math.sin(Math.min(fov, fovH))
   controls.target.copy(sphere.center)
   camera.position.copy(sphere.center).add(dir.multiplyScalar(distance))
@@ -234,14 +238,21 @@ function resize() {
   if (!container.value || !renderer) return
   const width = Math.max(1, container.value.clientWidth)
   const height = Math.max(1, container.value.clientHeight)
+  panelSpace = parseFloat(getComputedStyle(container.value).getPropertyValue('--panel-space')) || 0
   camera.aspect = width / height
+  if (panelSpace > 0 && panelSpace < width * 0.7) camera.setViewOffset(width, height, panelSpace / 2, 0, width, height)
+  else camera.clearViewOffset()
   camera.updateProjectionMatrix()
   renderer.setSize(width, height, false)
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 }
 
+function cssColor(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+}
+
 function background() {
-  return new THREE.Color(props.dark ? 0x0f172a : 0xeef2f7)
+  return new THREE.Color(cssColor('--theme-viewer-background'))
 }
 
 function init() {
@@ -281,10 +292,10 @@ function init() {
   root.rotation.x = -Math.PI / 2
   scene.add(root)
 
-  ground = new THREE.Mesh(new THREE.CircleGeometry(70, 96), new THREE.MeshStandardMaterial({ color: props.dark ? 0x1e293b : 0xdbe3ee, roughness: 0.95 }))
+  ground = new THREE.Mesh(new THREE.CircleGeometry(70, 96), new THREE.MeshStandardMaterial({ color: new THREE.Color(cssColor('--theme-viewer-ground')), roughness: 0.95 }))
   ground.rotation.x = -Math.PI / 2
   scene.add(ground)
-  const grid = new THREE.PolarGridHelper(70, 12, 6, 96, 0x94a3b8, 0x94a3b8)
+  const grid = new THREE.PolarGridHelper(70, 12, 6, 96, new THREE.Color(cssColor('--color-slate-400')), new THREE.Color(cssColor('--color-slate-400')))
   grid.material.transparent = true
   grid.material.opacity = 0.25
   ground.add(grid)
@@ -317,12 +328,18 @@ watch(() => props.locked, syncParts)
 watch(() => props.heights, () => { for (const entry of meshes.values()) placePart(entry) })
 watch(() => props.design, syncParts)
 watch(showLocks, refreshMaterials)
+watch(() => props.panelOpen, async () => {
+  await nextTick()
+  resize()
+  fit()
+})
 watch(() => [props.visibility, props.selected], () => { for (const entry of meshes.values()) placePart(entry) })
 watch(() => props.type, type => materials.accent?.color.setHex(ACCENT[type] ?? ACCENT.balance))
-watch(() => props.dark, () => {
+watch(() => props.dark, async () => {
+  await nextTick()
   if (!scene) return
   scene.background = background()
-  ground.material.color.setHex(props.dark ? 0x1e293b : 0xdbe3ee)
+  ground.material.color.set(cssColor('--theme-viewer-ground'))
 })
 watch(() => props.exploded, () => setTimeout(() => fit(), 900))
 
@@ -346,13 +363,13 @@ function snapshot({ title = '', subtitle = '' } = {}) {
     canvas.width = width
     canvas.height = height + 140
     const ctx = canvas.getContext('2d')
-    ctx.fillStyle = props.dark ? '#0f172a' : '#eef2f7'
+    ctx.fillStyle = cssColor('--theme-viewer-background')
     ctx.fillRect(0, 0, canvas.width, canvas.height)
     ctx.drawImage(source, 0, 0, width, height)
-    ctx.fillStyle = props.dark ? '#f8fafc' : '#0f172a'
+    ctx.fillStyle = cssColor('--theme-heading')
     ctx.font = '700 48px Inter, system-ui, sans-serif'
     ctx.fillText(title, 40, height + 68)
-    ctx.fillStyle = '#6366f1'
+    ctx.fillStyle = cssColor('--color-indigo-500')
     ctx.font = '600 26px Inter, system-ui, sans-serif'
     ctx.fillText(subtitle, 40, height + 112)
     canvas.toBlob(resolve, 'image/png')

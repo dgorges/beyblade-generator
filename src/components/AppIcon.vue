@@ -1,5 +1,5 @@
 <template>
-  <span class="app-icon" aria-hidden="true" v-html="svg"></span>
+  <span class="b_icon" aria-hidden="true" v-html="svg"></span>
 </template>
 
 <script setup>

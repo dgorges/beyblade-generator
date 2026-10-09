@@ -1,15 +1,15 @@
 <template>
-  <div class="gate">
-    <button class="theme-button gate-theme" type="button" @click="toggle" :aria-label="dark ? 'Lightmode' : 'Darkmode'" :title="dark ? 'Lightmode' : 'Darkmode'"><AppIcon name="palette-color" /></button>
-    <form class="gate-card" @submit.prevent="submit">
-      <div class="brand-mark">BX</div>
-      <h1>Beyblade Creator</h1>
-      <label for="gate-password">Passwort</label>
-      <input id="gate-password" v-model="password" type="password" autocomplete="current-password" autofocus />
-      <p v-if="error" class="gate-error" role="alert">{{ error }}</p>
-      <button class="primary" type="submit" :disabled="busy || !password">{{ busy ? 'Prüfe …' : 'Öffnen' }}</button>
+  <main class="b_gate">
+    <button class="b_button b_button--icon b_gate__theme" type="button" :aria-label="dark ? 'Lightmode' : 'Darkmode'" :title="dark ? 'Lightmode' : 'Darkmode'" @click="toggle"><AppIcon name="palette-color" /></button>
+    <form class="b_card b_gate__card" aria-labelledby="gate-title" @submit.prevent="submit">
+      <div class="b_logo" aria-hidden="true">BX</div>
+      <h1 id="gate-title" class="b_gate__title">Beyblade Creator</h1>
+      <label class="b_field__label" for="gate-password">Passwort</label>
+      <input id="gate-password" v-model="password" class="b_field__input bJS_gate-password" type="password" autocomplete="current-password" autofocus :aria-invalid="!!error" :aria-describedby="error ? 'gate-error' : undefined" />
+      <p v-if="error" id="gate-error" class="b_gate__error" role="alert">{{ error }}</p>
+      <button class="b_button b_button--primary" type="submit" :disabled="busy || !password">{{ busy ? 'Prüfe …' : 'Öffnen' }}</button>
     </form>
-  </div>
+  </main>
 </template>
 
 <script setup>

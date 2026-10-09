@@ -1,0 +1,32 @@
+.b_field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.b_field__label {
+    color: var(--theme-text-muted);
+    font-size: var(--font-size-s);
+    font-weight: var(--font-weight-bold);
+}
+
+.b_field__input {
+    width: 100%;
+    padding: var(--space-4) var(--space-5);
+    border: var(--thin-border-width) solid var(--theme-border);
+    border-radius: var(--radius-m);
+    background: var(--theme-surface-input);
+    color: inherit;
+}
+
+.b_field--group {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.b_field--group > .b_field__label {
+    margin-bottom: var(--space-3);
+    padding: 0;
+}
