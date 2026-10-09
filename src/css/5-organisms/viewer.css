@@ -18,9 +18,19 @@
     position: absolute;
     top: var(--space-5);
     right: var(--space-5);
-    left: var(--space-5);
     display: flex;
     flex-wrap: wrap;
+    gap: var(--space-2);
+    pointer-events: none;
+}
+
+.b_viewer__alignment {
+    position: absolute;
+    right: var(--space-5);
+    bottom: var(--space-5);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
     gap: var(--space-2);
     pointer-events: none;
 }
@@ -123,8 +133,13 @@
     }
 
     .b_viewer__toolbar {
-        top: 72px;
+        top: var(--space-9);
         right: calc(var(--panel-space) + var(--space-5));
+    }
+
+    .b_viewer__alignment {
+        right: calc(var(--panel-space) + var(--space-5));
+        bottom: 36px;
     }
 
     .b_viewer__hint {
@@ -133,28 +148,52 @@
 
     .b_viewer__busy {
         right: calc(var(--panel-space) + var(--space-5));
+        bottom: 84px;
     }
 }
 
 @media (max-width: 1023px) {
     :root {
         --viewer-height: clamp(220px, 40dvh, 440px);
+        --viewer-tool-height: 28px;
     }
 
     .b_viewer__hint {
         display: none;
     }
 
-    .b_viewer__toolbar {
-        top: var(--space-3);
+    .b_viewer__toolbar,
+    .b_viewer__alignment {
+        top: auto;
         right: var(--space-3);
         left: var(--space-3);
+        justify-content: flex-start;
         gap: var(--space-1);
     }
 
+    .b_viewer__alignment {
+        bottom: var(--space-3);
+    }
+
+    .b_viewer__toolbar {
+        bottom: calc(var(--space-3) + var(--viewer-tool-height) + var(--space-1));
+    }
+
     .b_viewer__tool {
-        padding: var(--space-1) var(--space-3);
+        height: var(--viewer-tool-height);
+        gap: 3px;
+        padding: 0 var(--space-2);
         font-size: var(--font-size-xs);
+    }
+
+    .b_viewer__busy {
+        top: var(--space-3);
+        bottom: auto;
+    }
+
+    .b_viewer__tooltip {
+        top: var(--space-3);
+        bottom: auto;
     }
 }
 

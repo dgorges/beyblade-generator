@@ -1,12 +1,7 @@
 <template>
   <div class="b_viewer">
     <div ref="container" class="b_viewer__canvas bJS_viewer-canvas" role="img" :aria-label="`3D-Ansicht. ${hovered ? hovered.label : 'Klick auf ein Teil öffnet seine Einstellungen.'}`" @pointermove="onHover" @pointerleave="hovered = null" @pointerdown="onDown" @pointerup="onUp"></div>
-    <div class="b_viewer__toolbar" role="toolbar" aria-label="Ansicht">
-      <button type="button" class="b_viewer__tool" title="Modell einpassen" @click="fit()"><AppIcon name="zoom-in" /> Einpassen</button>
-      <button type="button" class="b_viewer__tool" title="3D-Ansicht" @click="setView('iso')">3D</button>
-      <button type="button" class="b_viewer__tool" title="Draufsicht" @click="setView('top')">Oben</button>
-      <button type="button" class="b_viewer__tool" title="Seitenansicht" @click="setView('side')">Seite</button>
-      <button type="button" class="b_viewer__tool" title="Untersicht" @click="setView('bottom')">Unten</button>
+    <div class="b_viewer__toolbar" role="toolbar" aria-label="Beyblade Interaktivität">
       <button type="button" class="b_viewer__tool" :class="{ 'b_viewer__tool--active': exploded }" :aria-pressed="exploded" title="Teile auseinanderziehen" @click="emit('update:exploded', !exploded)"><AppIcon name="grid-even" /> Explosion</button>
       <button type="button" class="b_viewer__tool" :class="{ 'b_viewer__tool--active': spin }" :aria-pressed="spin" title="Automatisch drehen" @click="spin = !spin"><AppIcon name="refresh" /> Drehen</button>
       <button type="button" class="b_viewer__tool" :class="{ 'b_viewer__tool--active': showLocks }" :aria-pressed="showLocks" title="Gesperrte Schnittstellenteile hervorheben" @click="showLocks = !showLocks"><AppIcon name="lock" /> Schnittstellen</button>
@@ -29,6 +24,13 @@
           </template>
         </div>
       </div>
+    </div>
+    <div class="b_viewer__alignment" role="toolbar" aria-label="Ansicht">
+      <button type="button" class="b_viewer__tool" title="Modell einpassen" @click="fit()"><AppIcon name="zoom-in" /> Einpassen</button>
+      <button type="button" class="b_viewer__tool" title="3D-Ansicht" @click="setView('iso')">3D</button>
+      <button type="button" class="b_viewer__tool" title="Draufsicht" @click="setView('top')">Oben</button>
+      <button type="button" class="b_viewer__tool" title="Seitenansicht" @click="setView('side')">Seite</button>
+      <button type="button" class="b_viewer__tool" title="Untersicht" @click="setView('bottom')">Unten</button>
     </div>
     <div v-if="hovered" class="b_viewer__tooltip" aria-hidden="true">
       <strong>{{ hovered.label }} <small class="b_viewer__tooltip-hint">– klicken zum Bearbeiten</small></strong>

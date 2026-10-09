@@ -33,7 +33,7 @@
         top: 0;
         left: 0;
         z-index: 3;
-        right: calc(var(--panel-space) + 140px);
+        right: calc(var(--panel-space) + 440px);
         padding: var(--space-6) var(--space-5) 0;
         pointer-events: none;
     }

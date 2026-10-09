@@ -69,3 +69,11 @@
     white-space: nowrap;
     text-overflow: ellipsis;
 }
+
+@media (max-width: 1023px) {
+    .b_parts__body {
+        top: auto;
+        bottom: calc(100% + var(--space-2));
+        max-height: calc(var(--viewer-height) - var(--viewer-tool-height) * 2 - var(--space-3) * 3);
+    }
+}
