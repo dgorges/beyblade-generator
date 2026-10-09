@@ -12,7 +12,7 @@ async function init(kitId) {
   engine = createEngine(wasm)
   const kit = kits[kitId]
   const entries = await Promise.all(kit.parts.map(async part => {
-    const res = await fetch(`${kit.base}${part.id}.stl`)
+    const res = await fetch(`${import.meta.env.BASE_URL}${kit.base}${part.id}.stl`)
     if (!res.ok) throw new Error(`Kit-Datei ${part.id}.stl fehlt (${res.status})`)
     return [part.id, await res.arrayBuffer()]
   }))

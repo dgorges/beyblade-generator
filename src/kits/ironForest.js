@@ -2,7 +2,7 @@ export const ironForest = {
   id: 'iron-forest',
   name: 'Iron Forest 4-80 High Needle',
   source: 'VinCoda (Cults3D)',
-  base: '/kits/iron-forest/',
+  base: 'kits/iron-forest/',
   ratchet: { id: '4-80', label: '4-80', lugs: 4, height: 8.0 },
   groups: [
     { id: 'blade', label: 'Blade', order: 0 },

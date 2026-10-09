@@ -25,9 +25,11 @@
         </div>
 
         <div v-if="error" class="viewer-error">
-          <strong>Kit konnte nicht geladen werden</strong>
-          <span>{{ error }}</span>
-          <code>node scripts/extract-kit.mjs reference public/kits/iron-forest</code>
+          <strong>Kit-Dateien nicht gefunden</strong>
+          <span>Diese Version baut auf einem gekauften Kit auf. Aus Lizenzgründen liegen die Kit-Dateien nicht online, sondern nur lokal.</span>
+          <span>Lokal einrichten: STL-Dateien nach <code>reference/</code> kopieren und ausführen:</span>
+          <code>npm run kit:extract</code>
+          <small>{{ error }}</small>
         </div>
         <BeybladeViewer v-else :kit="kit" :heights="heights" :locked="locked" :design="design" :type="bey.type" :dark="dark" :exploded="exploded" :busy="busy" :visibility="visibility" :selected="selected" @visibility="visibility = $event" @select="selectPart" />
 
@@ -64,7 +66,7 @@
           <label class="secondary file-button">📂 Projekt laden<input type="file" accept=".json,application/json" @change="importProject"></label>
         </div>
 
-        <p class="prototype-note"><strong>Hinweis:</strong> Die 🔒 Schnittstellenteile (Lock-Chip, Oberring, Ratchet-Kern, Bit-Anschluss) stammen unverändert aus deinem gekauften Kit und sind nur für den privaten Gebrauch. Die Werte zu Angriff, Verteidigung und Ausdauer sind nur grobe Schätzungen aus der Geometrie.</p>
+        <p class="prototype-note"><strong>Hinweis:</strong> Die 🔒 Schnittstellenteile (Lock-Chip, Oberring, Ratchet-Kern, Bit-Anschluss) stammen unverändert aus deinem gekauften Kit und sind nur für den privaten Gebrauch. Die Werte zu Angriff, Verteidigung und Ausdauer sind nur grobe Schätzungen aus der Geometrie. Inoffizielles, nicht-kommerzielles Fanprojekt, nicht verbunden mit Takara Tomy oder Hasbro. „Beyblade“ ist eine Marke der jeweiligen Inhaber. Gedruckte Kreisel drehen sehr schnell und können brechen: nur unter Aufsicht spielen.</p>
       </aside>
     </main>
   </div>
