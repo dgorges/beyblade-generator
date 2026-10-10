@@ -133,8 +133,8 @@
     }
 
     .b_viewer__toolbar {
-        top: var(--space-9);
-        right: calc(var(--panel-space) + var(--space-5));
+        top: var(--space-5);
+        right: calc(var(--panel-space) + var(--space-5) + var(--button-space));
     }
 
     .b_viewer__alignment {
