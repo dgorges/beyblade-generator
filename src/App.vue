@@ -93,7 +93,7 @@
     <ShareDialog v-if="shareOpen" :bey="bey" :image="shareImage" @close="shareOpen = false" />
 
     <footer class="b_footer">
-      Nicht-kommerzielles Projekt für meine Jung! Danke an die KI.
+      Nicht-kommerzielles Projekt für meine Jungs! Danke an die KI.
     </footer>
   </div>
 </template>
